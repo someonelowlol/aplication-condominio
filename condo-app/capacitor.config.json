@@ -1,0 +1,10 @@
+{
+  "appId": "com.residensmart.com",
+  "appName": "residensmart",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}
