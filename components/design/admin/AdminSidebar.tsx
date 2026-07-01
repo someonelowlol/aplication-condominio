@@ -20,6 +20,7 @@ export interface AdminTabItem {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: React.ComponentType<any>;
 }
+import Logo from '../Logo';
 
 export const ADMIN_TABS: AdminTabItem[] = [
   { id: 'dashboard', label: 'Panel de Control', sublabel: 'KPIs y Operatividad', icon: Home },
@@ -42,13 +43,16 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   return (
     <aside className="w-full lg:w-72 bg-white border border-[#E5E1DA] p-4 flex flex-col space-y-3 shrink-0 rounded-none h-fit lg:sticky lg:top-24">
-      <div className="border-b border-[#E5E1DA] pb-3 mb-2">
-        <span className="text-[10px] font-mono tracking-[0.25em] text-[#8C857B] uppercase block">
-          Consola ResidenSmart
-        </span>
-        <h2 className="text-sm font-serif italic text-[#1A1A1A] mt-0.5 font-normal">
-          Menú de Administración
-        </h2>
+      <div className="border-b border-[#E5E1DA] pb-3 mb-2 flex items-center space-x-3">
+        <Logo showText={false} size="sm" className="w-8 h-8 shrink-0" />
+        <div>
+          <span className="text-[10px] font-mono tracking-[0.25em] text-[#8C857B] uppercase block">
+            Consola
+          </span>
+          <h2 className="text-sm font-serif italic text-brand-blue mt-0.5 font-normal leading-tight">
+            Administración
+          </h2>
+        </div>
       </div>
 
       <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-2 lg:gap-1.5 scrollbar-thin">
@@ -62,8 +66,8 @@ export default function AdminSidebar({ activeTab, onTabChange }: AdminSidebarPro
               onClick={() => onTabChange(item.id)}
               className={`flex items-center space-x-3 px-4 py-3 border text-left rounded-none shrink-0 transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-[#1A1A1A] border-[#1a1a1a] text-white'
-                  : 'bg-white border-[#E5E1DA] hover:bg-[#F5F2ED] text-[#5A554F] hover:text-[#1A1A1A]'
+                  ? 'bg-brand-blue border-brand-blue text-white'
+                  : 'bg-white border-[#E5E1DA] hover:bg-[#F5F2ED] text-[#5A554F] hover:text-brand-blue'
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />

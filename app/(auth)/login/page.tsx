@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { login, signup } from './actions';
 import { Building2, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import Logo from '@/components/design/Logo';
 
 function LoginFormContent() {
   const searchParams = useSearchParams();
@@ -131,16 +132,15 @@ function LoginFormContent() {
         {/* Logo & brand */}
         <div className="text-center mb-10 border-b border-[#E5E1DA] pb-6">
           <div className="flex justify-center mb-4">
-            <div className="inline-flex items-center space-x-1.5 bg-[#F5F2ED] text-[#8C857B] px-3 py-1 text-[9px] font-bold tracking-widest uppercase border border-[#E5E1DA]/50">
+            <div className="inline-flex items-center space-x-1.5 bg-[#F5F2ED] text-brand-blue px-3 py-1 text-[9px] font-bold tracking-widest uppercase border border-[#E5E1DA]/50">
               <Building2 className="w-3.5 h-3.5" />
               <span>Acceso de Seguridad</span>
             </div>
           </div>
           
-          <h1 className="text-3xl font-serif italic text-[#1A1A1A] tracking-tight">ResidenSmart</h1>
-          <p className="text-[10px] font-bold tracking-[0.2em] text-[#8C857B] uppercase mt-2">
-            Portal
-          </p>
+          <div className="flex justify-center mt-2">
+            <Logo size="md" variant="color" />
+          </div>
         </div>
 
         {/* Form Container */}
@@ -205,7 +205,7 @@ function LoginFormContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors text-[#8C857B] hover:text-[#1A1A1A]"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors text-[#8C857B] hover:text-brand-blue"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -218,7 +218,7 @@ function LoginFormContent() {
               form="login-form"
               disabled={isPending}
               className="w-full py-3.5 text-[10px] font-bold tracking-widest uppercase text-white transition-all duration-200 flex items-center justify-center gap-2 mb-6 rounded-none cursor-pointer"
-              style={{ background: isPending && currentAction === 'login' ? '#8C857B' : '#1A1A1A', opacity: isPending && currentAction !== 'login' ? 0.7 : 1 }}
+              style={{ background: isPending && currentAction === 'login' ? '#8C857B' : '#0D305F', opacity: isPending && currentAction !== 'login' ? 0.7 : 1 }}
             >
               {isPending && currentAction === 'login' ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
@@ -241,7 +241,7 @@ function LoginFormContent() {
               type="button"
               disabled={isPending}
               onClick={handleSignupResident}
-              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-[#1A1A1A] hover:bg-white"
+              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-brand-blue hover:bg-brand-blue hover:text-white"
             >
               {isPending && currentAction === 'signup-resident' ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -253,7 +253,7 @@ function LoginFormContent() {
               type="button"
               disabled={isPending}
               onClick={handleSignupAdmin}
-              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-[#1A1A1A] hover:bg-white"
+              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-brand-blue hover:bg-brand-blue hover:text-white"
             >
               {isPending && currentAction === 'signup-admin' ? (
                 <Loader2 className="w-3 h-3 animate-spin" />

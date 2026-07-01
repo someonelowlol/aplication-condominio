@@ -15,6 +15,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { Resident } from '@/lib/types';
+import Logo from './Logo';
 
 interface NavbarProps {
   currentTab: string;
@@ -61,11 +62,8 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           {/* Logo brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => handleNavClick('dashboard')}>
-            <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-serif italic font-bold tracking-tight text-[#1A1A1A]">ResidenSmart</span>
-              <span className="text-[10px] font-bold tracking-[0.2em] text-[#8C857B] uppercase block">Portal</span>
-            </div>
+          <div className="flex items-center cursor-pointer" onClick={() => handleNavClick('dashboard')}>
+            <Logo size="sm" variant="color" />
           </div>
 
           {/* Desktop Navigation Links */}
@@ -80,13 +78,13 @@ export default function Navbar({
                   onClick={() => handleNavClick(item.id)}
                   className={`py-1 transition-all relative uppercase tracking-widest text-[11px] font-bold ${
                     isActive 
-                      ? 'border-b border-[#1A1A1A] text-[#1A1A1A]' 
-                      : 'text-[#8C857B] hover:text-[#1A1A1A]'
+                      ? 'border-b-2 border-brand-teal text-brand-blue' 
+                      : 'text-[#8C857B] hover:text-brand-blue'
                   }`}
                 >
                   <span>{item.label}</span>
                   {item.badge > 0 && (
-                    <span className="ml-1.5 px-2 py-0.5 text-[9px] font-sans font-bold bg-[#1A1A1A] text-white rounded-full">
+                    <span className="ml-1.5 px-2 py-0.5 text-[9px] font-sans font-bold bg-brand-teal text-white rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -104,7 +102,7 @@ export default function Navbar({
             >
               <Bell className="w-4.5 h-4.5" />
               {pendingPaymentsCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#1A1A1A] rounded-full"></span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-teal rounded-full animate-pulse"></span>
               )}
             </button>
 
@@ -169,13 +167,13 @@ export default function Navbar({
                     onClick={() => handleNavClick(item.id)}
                     className={`w-full flex items-center justify-between px-4 py-3 text-[11px] font-bold tracking-widest uppercase transition ${
                       isActive 
-                        ? 'bg-[#1A1A1A] text-white' 
-                        : 'text-[#5A554F] hover:bg-[#F5F2ED]'
+                        ? 'bg-brand-blue text-white' 
+                        : 'text-[#5A554F] hover:bg-[#F5F2ED] hover:text-brand-blue'
                     }`}
                   >
                     <span>{item.label}</span>
                     {item.badge > 0 && (
-                      <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${isActive ? 'bg-white text-[#1A1A1A]' : 'bg-[#1A1A1A] text-white'}`}>
+                      <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${isActive ? 'bg-white text-brand-blue' : 'bg-brand-teal text-white'}`}>
                         {item.badge}
                       </span>
                     )}

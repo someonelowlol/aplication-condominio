@@ -360,9 +360,9 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
     <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] flex flex-col font-sans selection:bg-[#F5F2ED] antialiased">
       
       {/* GLOBAL BANNER DE SIMULACIÓN */}
-      <div className="bg-[#1A1A1A] text-[#8C857B] text-[10px] uppercase tracking-widest py-2.5 px-6 flex flex-wrap justify-between items-center border-b border-[#E5E1DA] gap-y-1">
+      <div className="bg-brand-blue text-[#E5E1DA] text-[10px] uppercase tracking-widest py-2.5 px-6 flex flex-wrap justify-between items-center border-b border-brand-teal/20 gap-y-1">
         <div className="flex items-center space-x-2">
-          <span className="w-1.5 h-1.5 bg-[#8C857B] rounded-full"></span>
+          <span className="w-1.5 h-1.5 bg-brand-teal rounded-full animate-ping"></span>
           <span>
             {isAdmin 
               ? <>Demostración interactiva • <strong className="text-white">Administrador</strong> (ResidenSmart)</>
@@ -374,7 +374,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
           <span className="opacity-75 hidden sm:inline">Vistas simuladas con LocalStorage</span>
           <button
             onClick={handleResetDemoState}
-            className="text-white hover:text-black font-bold bg-[#8C857B]/25 hover:bg-white border border-[#8C857B]/30 px-2 py-0.5 transition leading-none text-[9px] tracking-widest uppercase"
+            className="text-white hover:text-brand-blue font-bold bg-brand-teal/30 hover:bg-white border border-brand-teal/40 px-2 py-0.5 transition leading-none text-[9px] tracking-widest uppercase"
           >
             Reiniciar Demo
           </button>
@@ -541,7 +541,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                               title,
                               content,
                               date: new Date().toISOString().substring(0, 10),
-                              category: 'maintenance',
+                              category: 'maintenance' as const,
                               author: 'Administrador General'
                             };
                             setAnnouncements(prev => [newAnn, ...prev]);

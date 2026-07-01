@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Building2, Sparkles, ArrowRight } from 'lucide-react';
+import Logo from '@/components/design/Logo';
 
 export default function Home() {
   return (
@@ -9,13 +10,12 @@ export default function Home() {
       {/* HEADER */}
       <header className="border-b border-[#E5E1DA] bg-white">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-baseline space-x-2">
-            <span className="text-2xl font-serif italic font-bold tracking-tight text-[#1A1A1A]">ResidenSmart</span>
-            <span className="text-[10px] font-bold tracking-[0.2em] text-[#8C857B] uppercase block">Condominios</span>
+          <div className="flex items-center">
+            <Logo size="sm" variant="color" />
           </div>
           
           <Link href="/login">
-            <button className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A] hover:bg-[#F5F2ED] border border-[#E5E1DA] px-4 py-2 transition bg-white">
+            <button className="text-[10px] font-bold tracking-widest uppercase text-brand-blue hover:text-brand-teal hover:bg-[#F5F2ED] border border-[#E5E1DA] px-4 py-2 transition bg-white">
               Acceder al Portal
             </button>
           </Link>
@@ -42,7 +42,7 @@ export default function Home() {
           </p>
 
           <Link href="/login">
-            <button className="bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold tracking-widest uppercase px-8 py-4 transition flex items-center justify-center mx-auto rounded-none cursor-pointer">
+            <button className="bg-brand-blue hover:bg-brand-teal text-white text-[10px] font-bold tracking-widest uppercase px-8 py-4 transition flex items-center justify-center mx-auto rounded-none cursor-pointer">
               Ingresar al Panel
               <ArrowRight className="w-4 h-4 ml-2" />
             </button>
