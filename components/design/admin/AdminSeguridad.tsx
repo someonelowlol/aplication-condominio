@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Shield, 
   QrCode, 
@@ -10,7 +10,12 @@ import {
   Search, 
   Info,
   Smartphone,
-  Eye
+  Eye,
+  X,
+  User,
+  Clock,
+  LogOut,
+  AlertTriangle
 } from 'lucide-react';
 
 interface Visitor {
@@ -44,8 +49,8 @@ interface Parcel {
 }
 
 const INITIAL_VISITORS: Visitor[] = [
-  { id: 'vis-1', name: 'Pedro Domínguez (Repartidor Uber)', idNumber: 'INE-992211', unit: 'Torre B - 402', plate: 'MXN-45-88', entryTime: '2026-06-24 10:30', status: 'inside' },
-  { id: 'vis-2', name: 'Laura Gómez (Visita Familiar)', idNumber: 'INE-112233', unit: 'Torre A - 101', plate: 'Sin auto', entryTime: '2026-06-24 08:00', exitTime: '2026-06-24 10:15', status: 'exited' },
+  { id: 'vis-1', name: 'Carlos Mendoza (Reparador Telmex)', idNumber: 'INE-445588', unit: 'Torre A - 101', plate: 'Sin auto', entryTime: '2026-06-24 08:30', status: 'inside' },
+  { id: 'vis-2', name: 'Ana Lucía Prado (Visita Familiar)', idNumber: 'INE-112233', unit: 'Torre B - 402', plate: 'PQR-889-A', entryTime: '2026-06-24 09:00', status: 'inside' }
 ];
 
 const INITIAL_GUARD_LOGS: GuardLog[] = [
@@ -62,20 +67,20 @@ export default function AdminSeguridad() {
   const [segSubTab, setSegSubTab] = useState<'visitors' | 'guards' | 'parcels'>('visitors');
   
   // Visitors state
-  const [visitors, setVisitors] = useState<Visitor[]>(INITIAL_VISITORS);
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [visitorName, setVisitorName] = useState('');
   const [visitorIdCard, setVisitorIdCard] = useState('');
-  const [visitorUnit, setVisitorUnit] = useState('Torre B - 402');
+  const [visitorUnit, setVisitorUnit] = useState('Torre A - 101');
   const [visitorPlate, setVisitorPlate] = useState('');
 
   // Guard logs state
-  const [guardLogs, setGuardLogs] = useState<GuardLog[]>(INITIAL_GUARD_LOGS);
-  const [guardName, setGuardName] = useState('Oficial Martínez');
+  const [guardLogs, setGuardLogs] = useState<GuardLog[]>([]);
+  const [guardName, setGuardName] = useState('');
   const [guardDetails, setGuardDetails] = useState('');
   const [guardCategory, setGuardCategory] = useState<'round' | 'incident' | 'shift_change'>('round');
 
   // Parcels state
-  const [parcels, setParcels] = useState<Parcel[]>(INITIAL_PARCELS);
+  const [parcels, setParcels] = useState<Parcel[]>([]);
   const [parcelCarrier, setParcelCarrier] = useState('Amazon');
   const [parcelTracking, setParcelTracking] = useState('');
   const [parcelResident, setParcelResident] = useState('Luis Martínez');
@@ -85,6 +90,43 @@ export default function AdminSeguridad() {
   const [generatedQr, setGeneratedQr] = useState<string | null>(null);
   const [qrResident, setQrResident] = useState('Luis Martínez');
   const [qrVisitor, setQrVisitor] = useState('Mariana Solís');
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedVisitors = localStorage.getItem('condo_visitors');
+      setVisitors(savedVisitors ? JSON.parse(savedVisitors) : INITIAL_VISITORS);
+
+      const savedGuardLogs = localStorage.getItem('condo_guard_logs');
+      setGuardLogs(savedGuardLogs ? JSON.parse(savedGuardLogs) : INITIAL_GUARD_LOGS);
+
+      const savedParcels = localStorage.getItem('condo_parcels');
+      setParcels(savedParcels ? JSON.parse(savedParcels) : INITIAL_PARCELS);
+
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_visitors', JSON.stringify(visitors));
+    }
+  }, [visitors, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_guard_logs', JSON.stringify(guardLogs));
+    }
+  }, [guardLogs, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_parcels', JSON.stringify(parcels));
+    }
+  }, [parcels, isLoaded]);
 
   // ACTION: Register Visitor Entry
   const handleRegisterVisitor = (e: React.FormEvent) => {

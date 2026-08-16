@@ -30,7 +30,8 @@ import {
   INITIAL_INCIDENTS, 
   INITIAL_ANNOUNCEMENTS 
 } from '@/lib/mockData';
-import { Payment, Booking, Incident, Announcement, Resident } from '@/lib/types';
+import { Payment, Booking, Incident, Announcement, Resident, PaymentStatus, Amenity } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
 
 // Child components
 import Navbar from './Navbar';
@@ -75,37 +76,273 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
   
   // State backing with SSR-safe localStorage fallback
   const [resident, setResident] = useState<Resident>(() => {
-    if (typeof window === 'undefined') return CURRENT_RESIDENT;
+    const defaultVal: Resident = {
+      id: '',
+      name: 'Usuario Residente',
+      apartment: 'Apto. --',
+      tower: 'Torre --',
+      email: '',
+      phone: '',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+      balance: 0
+    };
+    if (typeof window === 'undefined') return defaultVal;
     const saved = localStorage.getItem('condo_resident');
-    return saved ? JSON.parse(saved) : CURRENT_RESIDENT;
+    return saved ? JSON.parse(saved) : defaultVal;
   });
 
   const [payments, setPayments] = useState<Payment[]>(() => {
-    if (typeof window === 'undefined') return INITIAL_PAYMENTS;
+    if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('condo_payments');
-    return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [bookings, setBookings] = useState<Booking[]>(() => {
-    if (typeof window === 'undefined') return INITIAL_BOOKINGS;
+    if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('condo_bookings');
-    return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [incidents, setIncidents] = useState<Incident[]>(() => {
-    if (typeof window === 'undefined') return INITIAL_INCIDENTS;
+    if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('condo_incidents');
-    return saved ? JSON.parse(saved) : INITIAL_INCIDENTS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
-    if (typeof window === 'undefined') return INITIAL_ANNOUNCEMENTS;
+    if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('condo_announcements');
-    return saved ? JSON.parse(saved) : INITIAL_ANNOUNCEMENTS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Active announcement focus state
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+
+  const [condoId, setCondoId] = useState<string | null>(null);
+  const [amenities, setAmenities] = useState<Amenity[]>(INITIAL_AMENITIES);
+
+  // Load session from Supabase on mount
+  useEffect(() => {
+    async function loadSession() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // 1. Fetch profile details
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email, full_name, role, unit_id, condominium_id')
+            .eq('id', user.id)
+            .single();
+
+          if (profile) {
+            const role = profile.role;
+            const condoIdVal = profile.condominium_id;
+            const unitId = profile.unit_id;
+            setCondoId(condoIdVal);
+
+            let residentName = profile.full_name || user.email?.split('@')[0] || 'Usuario';
+            let residentEmail = profile.email || '';
+            let apartment = 'N/A';
+            let tower = 'N/A';
+            let balance = 0;
+
+            if (role === 'resident' && profile.unit_id) {
+              // 2. Fetch unit details
+              const { data: unit } = await supabase
+                .from('units')
+                .select('id, unit_number, balance, block_id')
+                .eq('id', profile.unit_id)
+                .single();
+
+              if (unit) {
+                apartment = `Apto. ${unit.unit_number}`;
+                balance = Number(unit.balance);
+
+                // Fetch block/tower details
+                const { data: block } = await supabase
+                  .from('blocks')
+                  .select('name')
+                  .eq('id', unit.block_id)
+                  .single();
+
+                if (block) {
+                  tower = block.name;
+                }
+              }
+
+              // Update state for resident
+              setResident({
+                id: user.id,
+                name: residentName,
+                email: residentEmail,
+                apartment,
+                tower,
+                balance,
+                phone: '',
+                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+              });
+
+              // 3. Fetch resident payments
+              const { data: dbPayments } = await supabase
+                .from('payments')
+                .select('id, amount, status, date, receipt_url')
+                .eq('unit_id', unitId);
+
+              if (dbPayments && dbPayments.length > 0) {
+                const formattedPayments: Payment[] = dbPayments.map((p) => ({
+                  id: p.id,
+                  title: `Cuota de Administración`,
+                  description: `Pago registrado vía Supabase`,
+                  amount: Number(p.amount),
+                  dueDate: p.date.substring(0, 10),
+                  status: p.status as PaymentStatus,
+                  category: 'maintenance',
+                  reference: `REF-SUPA-${p.id.substring(0, 4).toUpperCase()}`,
+                  proofFile: p.receipt_url || undefined
+                }));
+                setPayments(formattedPayments);
+              } else {
+                setPayments([]);
+              }
+
+              // 4. Fetch resident bookings
+              const { data: dbBookings } = await supabase
+                .from('bookings')
+                .select(`
+                  id, 
+                  start_time, 
+                  end_time, 
+                  status, 
+                  amenity_id, 
+                  amenities (
+                    name
+                  )
+                `)
+                .eq('unit_id', unitId);
+
+              if (dbBookings && dbBookings.length > 0) {
+                const formattedBookings: Booking[] = dbBookings.map((b) => ({
+                  id: b.id,
+                  amenityId: b.amenity_id,
+                  amenityName: (b.amenities as any)?.name || 'Área Común',
+                  date: b.start_time.substring(0, 10),
+                  timeSlot: `${b.start_time.substring(11, 16)} - ${b.end_time.substring(11, 16)}`,
+                  durationHours: 2,
+                  totalCost: 0,
+                  status: b.status as any,
+                  residentId: user.id,
+                  guestCount: 2,
+                  createdAt: b.start_time,
+                  qrCode: `QR-CODE-${b.id.substring(0, 4).toUpperCase()}`
+                }));
+                setBookings(formattedBookings);
+              } else {
+                setBookings([]);
+              }
+            } else if (role === 'admin' && condoIdVal) {
+              setResident({
+                id: user.id,
+                name: residentName,
+                email: residentEmail,
+                apartment: 'Oficina',
+                tower: 'Admin',
+                balance: 0,
+                phone: '',
+                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80'
+              });
+
+              // Fetch blocks in condo
+              const { data: blocks } = await supabase
+                .from('blocks')
+                .select('id')
+                .eq('condominium_id', condoIdVal);
+
+              if (blocks && blocks.length > 0) {
+                const blockIds = blocks.map(b => b.id);
+                const { data: condoUnits } = await supabase
+                  .from('units')
+                  .select('id, balance')
+                  .in('block_id', blockIds);
+
+                if (condoUnits && condoUnits.length > 0) {
+                  const unitIds = condoUnits.map(u => u.id);
+
+                  // Fetch all payments
+                  const { data: adminPayments } = await supabase
+                    .from('payments')
+                    .select('id, amount, status, date, receipt_url, unit_id')
+                    .in('unit_id', unitIds);
+
+                  if (adminPayments && adminPayments.length > 0) {
+                    const formattedPayments: Payment[] = adminPayments.map((p) => ({
+                      id: p.id,
+                      title: `Cuota de Administración`,
+                      description: `Comprobante de pago cargado en Supabase`,
+                      amount: Number(p.amount),
+                      dueDate: p.date.substring(0, 10),
+                      status: p.status as PaymentStatus,
+                      category: 'maintenance',
+                      reference: `REF-SUPA-${p.id.substring(0, 4).toUpperCase()}`,
+                      proofFile: p.receipt_url || undefined
+                    }));
+                    setPayments(formattedPayments);
+                  } else {
+                    setPayments([]);
+                  }
+
+                  // Fetch all bookings
+                  const { data: adminBookings } = await supabase
+                    .from('bookings')
+                    .select(`
+                      id, 
+                      start_time, 
+                      end_time, 
+                      status, 
+                      amenity_id, 
+                      unit_id,
+                      amenities (
+                        name
+                      )
+                    `)
+                    .in('unit_id', unitIds);
+
+                  if (adminBookings && adminBookings.length > 0) {
+                    const formattedBookings: Booking[] = adminBookings.map((b) => ({
+                      id: b.id,
+                      amenityId: b.amenity_id,
+                      amenityName: (b.amenities as any)?.name || 'Área Común',
+                      date: b.start_time.substring(0, 10),
+                      timeSlot: `${b.start_time.substring(11, 16)} - ${b.end_time.substring(11, 16)}`,
+                      durationHours: 2,
+                      totalCost: 0,
+                      status: b.status as any,
+                      residentId: b.unit_id,
+                      guestCount: 2,
+                      createdAt: b.start_time,
+                      qrCode: `QR-CODE-${b.id.substring(0, 4).toUpperCase()}`
+                    }));
+                    setBookings(formattedBookings);
+                  } else {
+                    setBookings([]);
+                  }
+                } else {
+                  setPayments([]);
+                  setBookings([]);
+                }
+              } else {
+                setPayments([]);
+                setBookings([]);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching Supabase session data:', err);
+      }
+    }
+    loadSession();
+  }, [isAdmin, condoId]);
 
   // Sync state to localStorage (only runs in the browser)
   useEffect(() => {
@@ -117,7 +354,52 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
   }, [resident, payments, bookings, incidents, announcements]);
 
   // ACTION: Record payment success
-  const handlePaySuccess = (paymentId: string, amount: number, paymentMethod: string, proofName?: string) => {
+  const handlePaySuccess = async (paymentId: string, amount: number, paymentMethod: string, proofName?: string) => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('unit_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.unit_id) {
+          if (paymentMethod !== 'cash') {
+            // Call transaccional RPC for direct payment (credit card / transfer)
+            const { error } = await supabase.rpc('process_administration_payment', {
+              p_unit_id: profile.unit_id,
+              p_amount: amount,
+              p_receipt_url: proofName || 'comprobante_pago.pdf'
+            });
+
+            if (error) {
+              alert(`Error al registrar el pago en Supabase: ${error.message}`);
+              return;
+            }
+          } else {
+            // For cash / review: insert a payment row with status 'pending' or 'under_review'
+            const { error } = await supabase
+              .from('payments')
+              .insert({
+                unit_id: profile.unit_id,
+                amount: amount,
+                status: 'under_review',
+                receipt_url: proofName || 'comprobante_bancario_transferencia.pdf'
+              });
+
+            if (error) {
+              alert(`Error al guardar comprobante en Supabase: ${error.message}`);
+              return;
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('Error en proceso de pago:', err);
+    }
+
     setPayments(prev => prev.map(p => {
       if (p.id === paymentId) {
         return {
@@ -131,7 +413,6 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
       return p;
     }));
 
-    // Deduct from outstanding balance if not checking cash receipt
     if (paymentMethod !== 'cash') {
       setResident(prev => ({
         ...prev,
@@ -150,10 +431,46 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
   };
 
   // ACTION: Record new Booking
-  const handleAddBooking = (newBooking: Booking) => {
+  const handleAddBooking = async (newBooking: Booking) => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('unit_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.unit_id) {
+          // Format start and end times
+          const [startStr, endStr] = newBooking.timeSlot.split(' - ');
+          const dateStr = newBooking.date; // "YYYY-MM-DD"
+          const startTime = `${dateStr}T${startStr}:00Z`;
+          const endTime = `${dateStr}T${endStr}:00Z`;
+
+          const { error } = await supabase
+            .from('bookings')
+            .insert({
+              unit_id: profile.unit_id,
+              amenity_id: newBooking.amenityId,
+              start_time: startTime,
+              end_time: endTime,
+              status: 'confirmed'
+            });
+
+          if (error) {
+            alert(`Error al registrar reservación en Supabase: ${error.message}`);
+            return;
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('Error al registrar reserva:', err);
+    }
+
     setBookings(prev => [newBooking, ...prev]);
     
-    // Auto generate matching outstanding payment receipt for high fidelity, if rate > 0
     if (newBooking.totalCost > 0) {
       const associatedPayment: Payment = {
         id: `pay-book-${newBooking.id}`,
@@ -354,7 +671,152 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
     ? bookings.filter(b => b.status === 'pending').length
     : bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').length;
 
+  // Resident Join Condo states
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [searchingCondo, setSearchingCondo] = useState(false);
+  const [foundCondo, setFoundCondo] = useState<{ id: string; name: string; nit: string; address: string } | null>(null);
+  const [condoUnitsList, setCondoUnitsList] = useState<{ id: string; unit_number: string; block_name: string }[]>([]);
+  const [selectedUnitIdForJoin, setSelectedUnitIdForJoin] = useState<string>('');
+  const [joinSubmitting, setJoinSubmitting] = useState(false);
+
+  const handleSearchCondo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinCodeInput.trim()) return;
+
+    setSearchingCondo(true);
+    setFoundCondo(null);
+    setCondoUnitsList([]);
+    
+    try {
+      const supabase = createClient();
+      const code = joinCodeInput.trim();
+      
+      // Check if input matches UUID format to avoid Postgres casting errors
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
+      
+      let query = supabase
+        .from('condominiums')
+        .select('id, name, nit, address');
+        
+      if (isUuid) {
+        query = query.or(`id.eq.${code},nit.eq.${code}`);
+      } else {
+        query = query.eq('nit', code);
+      }
+
+      const { data: condos, error } = await query;
+
+      if (error || !condos || condos.length === 0) {
+        alert('No se encontró ningún condominio registrado con este código de vinculación o NIT.');
+        setSearchingCondo(false);
+        return;
+      }
+
+      const condo = condos[0];
+      setFoundCondo(condo);
+
+      // Fetch blocks & units for this condo
+      const { data: dbBlocks } = await supabase
+        .from('blocks')
+        .select('id, name')
+        .eq('condominium_id', condo.id);
+
+      if (dbBlocks && dbBlocks.length > 0) {
+        const blockIds = dbBlocks.map(b => b.id);
+        const { data: dbUnits } = await supabase
+          .from('units')
+          .select('id, unit_number, block_id')
+          .in('block_id', blockIds)
+          .order('unit_number', { ascending: true });
+
+        if (dbUnits && dbUnits.length > 0) {
+          const formatted = dbUnits.map(u => ({
+            id: u.id,
+            unit_number: u.unit_number,
+            block_name: dbBlocks.find(b => b.id === u.block_id)?.name || 'Torre'
+          }));
+          setCondoUnitsList(formatted);
+          setSelectedUnitIdForJoin(formatted[0].id);
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Error buscando condominio.');
+    } finally {
+      setSearchingCondo(false);
+    }
+  };
+
+  const handleConfirmJoinCondo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!foundCondo || !selectedUnitIdForJoin) return;
+
+    setJoinSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        // 1. Update resident's profile to link them to the condo and unit
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            condominium_id: foundCondo.id,
+            unit_id: selectedUnitIdForJoin,
+            role: 'resident'
+          })
+          .eq('id', user.id);
+
+        if (profileError) throw profileError;
+
+        // 2. Redundantly attempt to update the unit's owner_id from the client side.
+        // Even if RLS prevents this direct update, the backend trigger handles it.
+        try {
+          await supabase
+            .from('units')
+            .update({ owner_id: user.id })
+            .eq('id', selectedUnitIdForJoin);
+        } catch (unitErr) {
+          console.warn('Direct unit owner update failed or blocked by RLS, relying on trigger:', unitErr);
+        }
+
+        alert(`¡Te has vinculado exitosamente al ${foundCondo.name}!`);
+        setJoinModalOpen(false);
+        window.location.reload();
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Error vinculando cuenta a la unidad.');
+    } finally {
+      setJoinSubmitting(false);
+    }
+  };
+
   const activeIncidentsCount = incidents.filter(i => i.status !== 'resolved').length;
+
+  const handleUpdateResident = async (updated: Partial<Resident>) => {
+    setResident(prev => {
+      const newRes = { ...prev, ...updated };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('condo_resident', JSON.stringify(newRes));
+      }
+      return newRes;
+    });
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && updated.name) {
+        await supabase
+          .from('profiles')
+          .update({ full_name: updated.name })
+          .eq('id', user.id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] flex flex-col font-sans selection:bg-[#F5F2ED] antialiased">
@@ -390,6 +852,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
         activeBookingsCount={activeBookingsCount}
         activeIncidentsCount={activeIncidentsCount}
         isAdmin={isAdmin}
+        onUpdateResident={handleUpdateResident}
       />
 
       {/* CENTRAL WRAPPER */}
@@ -411,9 +874,25 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
             onAssignTechnician={handleAssignTechnician}
             onAddComment={handleAddComment}
             onAddAnnouncement={(newAnn) => setAnnouncements(prev => [newAnn, ...prev])}
+            condoId={condoId}
+            onCondoCreated={setCondoId}
           />
         ) : (
           <AnimatePresence mode="wait">
+            {!condoId || resident.apartment === 'N/A' ? (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-950 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+                <div>
+                  <h4 className="font-bold text-xs uppercase tracking-wider">¿Aún no estás vinculado a tu condominio?</h4>
+                  <p className="text-[11px] text-amber-800 mt-0.5">Ingresa el código de vinculación único otorgado por tu administración para habilitar tu departamento.</p>
+                </div>
+                <button
+                  onClick={() => setJoinModalOpen(true)}
+                  className="px-4 py-2 bg-[#1A1A1A] text-white text-[9px] font-bold tracking-widest uppercase hover:bg-black transition whitespace-nowrap cursor-pointer"
+                >
+                  Vincularme con Código
+                </button>
+              </div>
+            ) : null}
             {currentTab === 'dashboard' && (
             <motion.div
               key="dashboard"
@@ -656,34 +1135,40 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                   </div>
 
                   <div className="space-y-4">
-                    {announcements.map((ann) => {
-                      return (
-                        <div 
-                          key={ann.id}
-                          onClick={() => setSelectedAnnouncement(ann)}
-                          className="bg-white border border-[#E5E1DA] p-6 rounded-none hover:bg-[#F5F2ED] transition duration-155 cursor-pointer flex flex-col md:flex-row md:items-start justify-between gap-4 text-left"
-                        >
-                          <div className="space-y-2 flex-1">
-                            <div className="flex flex-wrap items-center gap-3">
-                              <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B]">{ann.date}</span>
-                              {ann.category === 'urgente' && (
-                                <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-rose-300 bg-rose-50 text-[#1A1A1A]">Urgente</span>
-                              )}
-                              {ann.category === 'maintenance' && (
-                                <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-[#CEC7BC] bg-[#F5F2ED] text-[#1A1A1A]">Mantenimiento</span>
-                              )}
-                              {ann.category === 'event' && (
-                                <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-emerald-300 bg-emerald-50 text-[#1A1A1A]">Evento Social</span>
-                              )}
+                    {announcements.length === 0 ? (
+                      <div className="border border-dashed border-[#E5E1DA] py-12 text-center text-[#8C857B] text-xs bg-white">
+                        No hay anuncios oficiales publicados por el momento en esta copropiedad.
+                      </div>
+                    ) : (
+                      announcements.map((ann) => {
+                        return (
+                          <div 
+                            key={ann.id}
+                            onClick={() => setSelectedAnnouncement(ann)}
+                            className="bg-white border border-[#E5E1DA] p-6 rounded-none hover:bg-[#F5F2ED] transition duration-155 cursor-pointer flex flex-col md:flex-row md:items-start justify-between gap-4 text-left"
+                          >
+                            <div className="space-y-2 flex-1">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B]">{ann.date}</span>
+                                {ann.category === 'urgente' && (
+                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-rose-300 bg-rose-50 text-[#1A1A1A]">Urgente</span>
+                                )}
+                                {ann.category === 'maintenance' && (
+                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-[#CEC7BC] bg-[#F5F2ED] text-[#1A1A1A]">Mantenimiento</span>
+                                )}
+                                {ann.category === 'event' && (
+                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-emerald-300 bg-emerald-50 text-[#1A1A1A]">Evento Social</span>
+                                )}
+                              </div>
+                              <h3 className="font-serif italic text-lg leading-snug text-[#1A1A1A] hover:underline font-normal">{ann.title}</h3>
+                              <p className="text-xs text-[#8C857B] leading-relaxed line-clamp-2 mt-1">{ann.content}</p>
                             </div>
-                            <h3 className="font-serif italic text-lg leading-snug text-[#1A1A1A] hover:underline font-normal">{ann.title}</h3>
-                            <p className="text-xs text-[#8C857B] leading-relaxed line-clamp-2 mt-1">{ann.content}</p>
+                            
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A] hover:underline self-end md:self-start">Leer más →</span>
                           </div>
-                          
-                          <span className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A] hover:underline self-end md:self-start">Leer más →</span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
 
@@ -1005,7 +1490,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               ) : (
                 <BookingsSection 
-                  amenities={INITIAL_AMENITIES}
+                  amenities={amenities}
                   bookings={bookings}
                   onAddBooking={handleAddBooking}
                   onCancelBooking={handleCancelBooking}
@@ -1264,6 +1749,102 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                   Entendido / Cerrar Aviso
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* RESIDENT JOIN CONDO MODAL */}
+      <AnimatePresence>
+        {joinModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-[#E5E1DA] max-w-md w-full p-6 text-left space-y-5 shadow-2xl"
+            >
+              <div className="flex justify-between items-center border-b border-[#E5E1DA] pb-3">
+                <div>
+                  <h3 className="text-base font-serif italic text-[#1A1A1A]">Vincularse a un Condominio</h3>
+                  <p className="text-[10px] text-[#8C857B] uppercase tracking-wider font-mono">Ingresa el Código de Vinculación o NIT</p>
+                </div>
+                <button onClick={() => setJoinModalOpen(false)} className="p-1 text-[#8C857B] hover:text-[#1A1A1A]">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {!foundCondo ? (
+                <form onSubmit={handleSearchCondo} className="space-y-4">
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-widest text-[#8C857B] mb-1.5">
+                      Código de Vinculación / NIT del Condominio
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={joinCodeInput}
+                      onChange={(e) => setJoinCodeInput(e.target.value)}
+                      placeholder="Ej: NIT-177386450"
+                      className="w-full bg-[#FDFCFB] border border-[#E5E1DA] px-3.5 py-2.5 text-xs text-[#1A1A1A] outline-none focus:border-[#1A1A1A] font-mono"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={searchingCondo}
+                    className="w-full py-2.5 bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold uppercase tracking-widest transition flex items-center justify-center gap-2"
+                  >
+                    {searchingCondo ? 'Buscando Condominio...' : 'Verificar Código'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleConfirmJoinCondo} className="space-y-4">
+                  <div className="p-3 bg-[#F5F2ED] border border-[#E5E1DA] space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#0D9488]">Condominio Encontrado</span>
+                    <h4 className="font-serif italic text-lg text-[#1A1A1A]">{foundCondo.name}</h4>
+                    <p className="text-[10px] text-[#8C857B] font-mono">{foundCondo.address} • NIT: {foundCondo.nit}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-widest text-[#8C857B] mb-1.5">
+                      Selecciona tu Unidad / Departamento
+                    </label>
+                    {condoUnitsList.length > 0 ? (
+                      <select
+                        value={selectedUnitIdForJoin}
+                        onChange={(e) => setSelectedUnitIdForJoin(e.target.value)}
+                        className="w-full bg-[#FDFCFB] border border-[#E5E1DA] px-3 py-2 text-xs text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                      >
+                        {condoUnitsList.map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.block_name} - Departamento {u.unit_number}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-xs text-rose-700 italic">Este condominio aún no tiene departamentos generados.</p>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-[#E5E1DA] flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFoundCondo(null)}
+                      className="flex-1 py-2 border border-[#E5E1DA] text-[9px] font-bold uppercase tracking-widest text-[#8C857B] hover:bg-[#F5F2ED]"
+                    >
+                      Atrás
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={joinSubmitting || condoUnitsList.length === 0}
+                      className="flex-1 py-2 bg-[#1A1A1A] hover:bg-black text-white text-[9px] font-bold uppercase tracking-widest transition"
+                    >
+                      {joinSubmitting ? 'Vinculando...' : 'Confirmar y Entrar'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </motion.div>
           </div>
         )}

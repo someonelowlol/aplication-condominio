@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CalendarRange, 
   Check, 
@@ -46,11 +46,29 @@ export default function AdminReservas({
   const [resSubTab, setResSubTab] = useState<'pending' | 'rules' | 'checklist'>('pending');
   
   // Rules State
-  const [rules, setRules] = useState<AmenityRule[]>(INITIAL_RULES);
+  const [rules, setRules] = useState<AmenityRule[]>([]);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [editCapacity, setEditCapacity] = useState('');
   const [editCost, setEditCost] = useState('');
   const [editDeposit, setEditDeposit] = useState('');
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedRules = localStorage.getItem('condo_rules');
+      setRules(savedRules ? JSON.parse(savedRules) : INITIAL_RULES);
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_rules', JSON.stringify(rules));
+    }
+  }, [rules, isLoaded]);
   
   // Checklist State (check-list digital)
   const [activeChecklistId, setActiveChecklistId] = useState<string | null>(

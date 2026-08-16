@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   UserPlus, 
@@ -10,8 +10,10 @@ import {
   Info,
   Calendar,
   Layers,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface Unit {
   id: string;
@@ -104,11 +106,19 @@ const INITIAL_UNITS: Unit[] = [
   }
 ];
 
-export default function AdminCrm() {
-  const [units, setUnits] = useState<Unit[]>(INITIAL_UNITS);
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>('u-402');
+export default function AdminCrm({ condoId }: { condoId?: string | null }) {
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterTower, setFilterTower] = useState('all');
+
+  // Database integration state
+  const [loading, setLoading] = useState(false);
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
+  const [unassignedResidents, setUnassignedResidents] = useState<{ id: string; full_name: string; email: string }[]>([]);
+  const [selectedResidentId, setSelectedResidentId] = useState<string>('');
+  const [isManualResident, setIsManualResident] = useState(false);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   // Input states for adding new sub-items
   const [newResidentName, setNewResidentName] = useState('');
@@ -122,56 +132,283 @@ export default function AdminCrm() {
   const [newVehiclePlate, setNewVehiclePlate] = useState('');
   const [newVehicleBrand, setNewVehicleBrand] = useState('');
   const [newVehicleColor, setNewVehicleColor] = useState('');
+  const [condoNit, setCondoNit] = useState<string>('');
+
+  // Fetch dynamic structure from Supabase if condoId is active
+  useEffect(() => {
+    if (!condoId) {
+      setUnits([]);
+      setBlocks([]);
+      setUnassignedResidents([]);
+      setSelectedUnitId(null);
+      return;
+    }
+
+    async function loadCrmData() {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+
+        // 0. Fetch condo details for human readable NIT join code
+        const { data: condoData } = await supabase
+          .from('condominiums')
+          .select('nit')
+          .eq('id', condoId)
+          .single();
+
+        if (condoData?.nit) {
+          setCondoNit(condoData.nit);
+        }
+
+        // 1. Fetch blocks
+        const { data: dbBlocks, error: blocksErr } = await supabase
+          .from('blocks')
+          .select('id, name')
+          .eq('condominium_id', condoId);
+
+        if (blocksErr) throw blocksErr;
+        setBlocks(dbBlocks || []);
+
+        if (dbBlocks && dbBlocks.length > 0) {
+          const blockIds = dbBlocks.map(b => b.id);
+
+          // 2. Fetch units
+          const { data: dbUnits, error: unitsErr } = await supabase
+            .from('units')
+            .select('id, block_id, unit_number, floor, coefficient, balance, owner_id')
+            .in('block_id', blockIds)
+            .order('unit_number', { ascending: true });
+
+          if (unitsErr) throw unitsErr;
+
+          // 3. Fetch residents (profiles)
+          const { data: dbProfiles, error: profilesErr } = await supabase
+            .from('profiles')
+            .select('id, email, full_name, role, unit_id')
+            .eq('role', 'resident');
+
+          if (profilesErr) throw profilesErr;
+
+          // 4. Map DB units to CRM format
+          const mappedUnits: Unit[] = (dbUnits || []).map(u => {
+            const blockName = dbBlocks.find(b => b.id === u.block_id)?.name || 'Torre';
+            
+            // Find real profiles associated with this unit
+            const unitResidents = (dbProfiles || [])
+              .filter(p => p.unit_id === u.id)
+              .map(p => ({
+                id: p.id,
+                name: p.full_name,
+                type: (u.owner_id === p.id ? 'propietario' : 'arrendatario') as any,
+                email: p.email,
+                phone: '+52 55 0000 0000'
+              }));
+
+            // Load extra mock elements from localStorage
+            const localData = localStorage.getItem(`crm_details_${u.id}`);
+            const parsed = localData ? JSON.parse(localData) : { pets: [], vehicles: [], history: [] };
+
+            return {
+              id: u.id,
+              name: u.unit_number,
+              tower: blockName,
+              size: Math.round(70 + Number(u.coefficient) * 2000) || 90,
+              storage: `Bodega B-${u.unit_number}`,
+              parking: [`Cajón C-${u.unit_number}`],
+              residents: unitResidents.length > 0 ? unitResidents : (parsed.residents || []),
+              pets: parsed.pets || [],
+              vehicles: parsed.vehicles || [],
+              history: parsed.history || []
+            };
+          });
+
+          setUnits(mappedUnits);
+          
+          // Auto select first unit if none selected or selected doesn't exist anymore
+          if (mappedUnits.length > 0) {
+            setSelectedUnitId(prev => {
+              const stillExists = mappedUnits.some(mu => mu.id === prev);
+              return stillExists ? prev : mappedUnits[0].id;
+            });
+          } else {
+            setSelectedUnitId(null);
+          }
+        } else {
+          setUnits([]);
+          setSelectedUnitId(null);
+        }
+
+        // Fetch unassigned resident profiles
+        const { data: unassignedProfiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .eq('role', 'resident')
+          .is('unit_id', null);
+
+        setUnassignedResidents(unassignedProfiles || []);
+
+      } catch (err: any) {
+        console.error('Error loading CRM data from Supabase:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadCrmData();
+  }, [condoId, reloadTrigger]);
 
   // Selected Unit info
   const selectedUnit = units.find(u => u.id === selectedUnitId);
 
   // Actions
-  const handleAddResident = (e: React.FormEvent) => {
+  const handleAddResident = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUnitId || !newResidentName) return;
+    if (!selectedUnitId) return;
 
-    setUnits(prev => prev.map(u => {
-      if (u.id === selectedUnitId) {
-        const newRes = {
-          id: `res-crm-${Date.now()}`,
-          name: newResidentName,
-          type: newResidentRole,
-          email: newResidentEmail || 'correo@simulado.com',
-          phone: newResidentPhone || '+52 55 0000 0000'
-        };
-        return {
-          ...u,
-          residents: [...u.residents, newRes]
-        };
+    if (condoId && !isManualResident) {
+      // Supabase Mode - Assign Real Resident Profile
+      if (!selectedResidentId) {
+        alert('Por favor seleccione un residente registrado de la lista.');
+        return;
       }
-      return u;
-    }));
 
-    setNewResidentName('');
-    setNewResidentEmail('');
-    setNewResidentPhone('');
+      try {
+        const supabase = createClient();
+        
+        // Update resident's profile unit & condo
+        const { error: profileErr } = await supabase
+          .from('profiles')
+          .update({
+            unit_id: selectedUnitId,
+            condominium_id: condoId
+          })
+          .eq('id', selectedResidentId);
+
+        if (profileErr) throw profileErr;
+
+        // If Owner, update unit owner_id
+        if (newResidentRole === 'propietario') {
+          const { error: unitErr } = await supabase
+            .from('units')
+            .update({
+              owner_id: selectedResidentId
+            })
+            .eq('id', selectedUnitId);
+
+          if (unitErr) throw unitErr;
+        }
+
+        setSelectedResidentId('');
+        setReloadTrigger(prev => prev + 1);
+      } catch (err: any) {
+        console.error('Error assigning resident:', err);
+        alert(`Error al asignar residente: ${err.message || err}`);
+      }
+    } else {
+      // Local/Demo Mode or Simulated Ocupant
+      if (!newResidentName) return;
+
+      const newRes = {
+        id: `res-manual-${Date.now()}`,
+        name: newResidentName,
+        type: newResidentRole,
+        email: newResidentEmail || 'correo@simulado.com',
+        phone: newResidentPhone || '+52 55 0000 0000'
+      };
+
+      setUnits(prev => prev.map(u => {
+        if (u.id === selectedUnitId) {
+          const updatedResidents = [...u.residents, newRes];
+          
+          // Save manual residents to localStorage for persistence
+          const localData = localStorage.getItem(`crm_details_${u.id}`);
+          const parsed = localData ? JSON.parse(localData) : { pets: [], vehicles: [], history: [] };
+          localStorage.setItem(`crm_details_${u.id}`, JSON.stringify({
+            ...parsed,
+            residents: updatedResidents
+          }));
+
+          return {
+            ...u,
+            residents: updatedResidents
+          };
+        }
+        return u;
+      }));
+
+      setNewResidentName('');
+      setNewResidentEmail('');
+      setNewResidentPhone('');
+    }
   };
 
-  const handleRemoveResident = (residentId: string) => {
+  const handleRemoveResident = async (residentId: string) => {
     if (!selectedUnitId) return;
-    setUnits(prev => prev.map(u => {
-      if (u.id === selectedUnitId) {
-        const residentToRemove = u.residents.find(r => r.id === residentId);
-        const historyEntry = residentToRemove ? {
-          name: residentToRemove.name,
-          period: `${new Date().getFullYear()} - Salida`,
-          role: residentToRemove.type.toUpperCase()
-        } : null;
 
-        return {
-          ...u,
-          residents: u.residents.filter(r => r.id !== residentId),
-          history: historyEntry ? [...u.history, historyEntry] : u.history
-        };
+    if (condoId && !residentId.startsWith('res-manual-') && !residentId.startsWith('res-crm-')) {
+      // Real database resident!
+      try {
+        const supabase = createClient();
+        
+        // Clear unit_id on profile
+        const { error: profileErr } = await supabase
+          .from('profiles')
+          .update({ unit_id: null, condominium_id: null })
+          .eq('id', residentId);
+        
+        if (profileErr) throw profileErr;
+
+        // Check if this resident was the owner
+        const selectedUnitObj = units.find(u => u.id === selectedUnitId);
+        if (selectedUnitObj && selectedUnitObj.residents.find(r => r.id === residentId)?.type === 'propietario') {
+          const { error: unitErr } = await supabase
+            .from('units')
+            .update({ owner_id: null })
+            .eq('id', selectedUnitId);
+          if (unitErr) throw unitErr;
+        }
+
+        setReloadTrigger(prev => prev + 1);
+      } catch (err: any) {
+        console.error('Error removing resident from unit:', err);
+        alert(`Error al remover residente: ${err.message || err}`);
       }
-      return u;
-    }));
+    } else {
+      // Manual resident
+      setUnits(prev => prev.map(u => {
+        if (u.id === selectedUnitId) {
+          const updatedResidents = u.residents.filter(r => r.id !== residentId);
+          
+          const localData = localStorage.getItem(`crm_details_${u.id}`);
+          const parsed = localData ? JSON.parse(localData) : { pets: [], vehicles: [], history: [] };
+          localStorage.setItem(`crm_details_${u.id}`, JSON.stringify({
+            ...parsed,
+            residents: updatedResidents
+          }));
+
+          const residentToRemove = u.residents.find(r => r.id === residentId);
+          const historyEntry = residentToRemove ? {
+            name: residentToRemove.name,
+            period: `${new Date().getFullYear()} - Salida`,
+            role: residentToRemove.type.toUpperCase()
+          } : null;
+
+          const updatedHistory = historyEntry ? [...u.history, historyEntry] : u.history;
+          localStorage.setItem(`crm_details_${u.id}`, JSON.stringify({
+            ...parsed,
+            residents: updatedResidents,
+            history: updatedHistory
+          }));
+
+          return {
+            ...u,
+            residents: updatedResidents,
+            history: updatedHistory
+          };
+        }
+        return u;
+      }));
+    }
   };
 
   const handleAddPet = (e: React.FormEvent) => {
@@ -180,9 +417,18 @@ export default function AdminCrm() {
 
     setUnits(prev => prev.map(u => {
       if (u.id === selectedUnitId) {
+        const updatedPets = [...u.pets, { name: newPetName, breed: newPetBreed || 'Mixto', vaccinesUpToDate: true }];
+        
+        const localData = localStorage.getItem(`crm_details_${u.id}`);
+        const parsed = localData ? JSON.parse(localData) : { pets: [], vehicles: [], history: [] };
+        localStorage.setItem(`crm_details_${u.id}`, JSON.stringify({
+          ...parsed,
+          pets: updatedPets
+        }));
+
         return {
           ...u,
-          pets: [...u.pets, { name: newPetName, breed: newPetBreed || 'Mixto', vaccinesUpToDate: true }]
+          pets: updatedPets
         };
       }
       return u;
@@ -198,9 +444,18 @@ export default function AdminCrm() {
 
     setUnits(prev => prev.map(u => {
       if (u.id === selectedUnitId) {
+        const updatedVehicles = [...u.vehicles, { plate: newVehiclePlate, brand: newVehicleBrand || 'Desconocido', color: newVehicleColor || 'Desconocido' }];
+        
+        const localData = localStorage.getItem(`crm_details_${u.id}`);
+        const parsed = localData ? JSON.parse(localData) : { pets: [], vehicles: [], history: [] };
+        localStorage.setItem(`crm_details_${u.id}`, JSON.stringify({
+          ...parsed,
+          vehicles: updatedVehicles
+        }));
+
         return {
           ...u,
-          vehicles: [...u.vehicles, { plate: newVehiclePlate, brand: newVehicleBrand || 'Desconocido', color: newVehicleColor || 'Desconocido' }]
+          vehicles: updatedVehicles
         };
       }
       return u;
@@ -223,9 +478,17 @@ export default function AdminCrm() {
 
   return (
     <div className="space-y-8 text-left animate-fade-in">
-      <div className="border-b border-[#E5E1DA] pb-4">
-        <span className="text-[10px] font-mono tracking-[0.25em] text-[#8C857B] uppercase block">Gestión del Condominio</span>
-        <h1 className="text-3xl font-serif italic text-[#1A1A1A] font-normal">CRM de Residentes y Unidades</h1>
+      <div className="border-b border-[#E5E1DA] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <span className="text-[10px] font-mono tracking-[0.25em] text-[#8C857B] uppercase block">Gestión del Condominio</span>
+          <h1 className="text-3xl font-serif italic text-[#1A1A1A] font-normal">CRM de Residentes y Unidades</h1>
+        </div>
+        {condoId && (
+          <div className="bg-[#F5F2ED] border border-[#E5E1DA] p-3 text-left sm:text-right">
+            <span className="text-[9px] font-mono tracking-widest text-[#8C857B] uppercase block">Código de Vinculación para Residentes:</span>
+            <span className="text-sm font-mono font-bold text-[#0D9488] select-all cursor-pointer bg-white px-2.5 py-1 border border-[#CEC7BC] inline-block mt-1" title="Copia este código único y compártelo con tus condóminos">{condoNit || condoId}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -248,37 +511,51 @@ export default function AdminCrm() {
               className="bg-white border border-[#E5E1DA] px-2 py-1 text-xs outline-none focus:border-[#1A1A1A]"
             >
               <option value="all">Todas</option>
-              <option value="Torre A">Torre A</option>
-              <option value="Torre B">Torre B</option>
+              {condoId ? (
+                blocks.map(b => (
+                  <option key={b.id} value={b.name}>{b.name}</option>
+                ))
+              ) : (
+                <>
+                  <option value="Torre A">Torre A</option>
+                  <option value="Torre B">Torre B</option>
+                </>
+              )}
             </select>
           </div>
 
           <div className="space-y-3">
-            {filteredUnits.map(unit => {
-              const isSelected = selectedUnitId === unit.id;
-              return (
-                <div
-                  key={unit.id}
-                  onClick={() => setSelectedUnitId(unit.id)}
-                  className={`border p-4 cursor-pointer transition flex justify-between items-center ${
-                    isSelected ? 'bg-[#F5F2ED] border-[#1A1A1A]' : 'bg-white border-[#E5E1DA] hover:bg-[#F5F2ED]/50'
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <span className="text-[9px] font-mono tracking-wider text-[#8C857B] uppercase">{unit.tower}</span>
-                    <h4 className="text-base font-serif italic text-[#1A1A1A] leading-none">Unidad {unit.name}</h4>
-                    <p className="text-[10px] text-[#8C857B]">
-                      {unit.residents.length > 0 ? unit.residents[0].name : 'Sin residentes'}
-                    </p>
-                  </div>
-                  <Building2 className="w-4 h-4 text-[#8C857B]" />
-                </div>
-              );
-            })}
-            {filteredUnits.length === 0 && (
+            {loading ? (
+              <div className="min-h-[200px] flex flex-col items-center justify-center gap-2 border border-dashed border-[#E5E1DA] bg-white">
+                <Loader2 className="w-6 h-6 animate-spin text-[#8C857B]" />
+                <span className="text-[10px] font-bold tracking-widest uppercase text-[#8C857B]">Cargando inventario...</span>
+              </div>
+            ) : filteredUnits.length === 0 ? (
               <div className="border border-dashed border-[#E5E1DA] bg-white py-12 text-center text-[#8C857B] text-xs">
                 No se encontraron unidades con estos criterios.
               </div>
+            ) : (
+              filteredUnits.map(unit => {
+                const isSelected = selectedUnitId === unit.id;
+                return (
+                  <div
+                    key={unit.id}
+                    onClick={() => setSelectedUnitId(unit.id)}
+                    className={`border p-4 cursor-pointer transition flex justify-between items-center ${
+                      isSelected ? 'bg-[#F5F2ED] border-[#1A1A1A]' : 'bg-white border-[#E5E1DA] hover:bg-[#F5F2ED]/50'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-mono tracking-wider text-[#8C857B] uppercase">{unit.tower}</span>
+                      <h4 className="text-base font-serif italic text-[#1A1A1A] leading-none">Unidad {unit.name}</h4>
+                      <p className="text-[10px] text-[#8C857B]">
+                        {unit.residents.length > 0 ? unit.residents[0].name : 'Sin residentes'}
+                      </p>
+                    </div>
+                    <Building2 className="w-4 h-4 text-[#8C857B]" />
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -340,32 +617,74 @@ export default function AdminCrm() {
                 </div>
 
                 {/* Add Resident Form */}
-                <form onSubmit={handleAddResident} className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Nombre Completo"
-                    className="sm:col-span-2 bg-[#FDFCFB] border border-[#E5E1DA] px-3 py-1.5 text-xs outline-none focus:border-[#1A1A1A]"
-                    value={newResidentName}
-                    onChange={e => setNewResidentName(e.target.value)}
-                  />
-                  <select
-                    className="bg-[#FDFCFB] border border-[#E5E1DA] px-3 py-1.5 text-xs outline-none focus:border-[#1A1A1A]"
-                    value={newResidentRole}
-                    onChange={e => setNewResidentRole(e.target.value as any)}
-                  >
-                    <option value="propietario">Propietario</option>
-                    <option value="arrendatario">Arrendatario</option>
-                    <option value="cohabitante">Cohabitante</option>
-                  </select>
-                  <button
-                    type="submit"
-                    className="bg-[#1A1A1A] hover:bg-black text-white text-[9px] font-bold tracking-widest uppercase py-1.5 rounded-none flex items-center justify-center gap-1.5"
-                  >
-                    <UserPlus className="w-3.5 h-3.5" />
-                    <span>Agregar</span>
-                  </button>
-                </form>
+                <div className="pt-4 border-t border-[#E5E1DA] space-y-3">
+                  {condoId && (
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="font-mono text-[#8C857B] uppercase font-bold">Tipo de Asignación:</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsManualResident(!isManualResident)}
+                        className="text-[#0D9488] hover:underline font-bold"
+                      >
+                        {isManualResident ? "← Usar Residentes Registrados" : "+ Simular Ocupante Temporal"}
+                      </button>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleAddResident} className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    {condoId && !isManualResident ? (
+                      <div className="sm:col-span-2">
+                        {unassignedResidents.length > 0 ? (
+                          <select
+                            required
+                            className="w-full bg-[#FDFCFB] border border-[#E5E1DA] px-3 py-1.5 text-xs outline-none focus:border-[#1A1A1A]"
+                            value={selectedResidentId}
+                            onChange={e => setSelectedResidentId(e.target.value)}
+                          >
+                            <option value="">-- Seleccionar Residente --</option>
+                            {unassignedResidents.map(r => (
+                              <option key={r.id} value={r.id}>
+                                {r.full_name} ({r.email})
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="text-[9px] text-[#8C857B] bg-[#F5F2ED] border border-dashed border-[#E5E1DA] p-2 text-center leading-normal">
+                            No hay residentes registrados sin unidad. Pídales que se registren en el portal con su correo.
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Nombre Completo"
+                        className="sm:col-span-2 bg-[#FDFCFB] border border-[#E5E1DA] px-3 py-1.5 text-xs outline-none focus:border-[#1A1A1A]"
+                        value={newResidentName}
+                        onChange={e => setNewResidentName(e.target.value)}
+                      />
+                    )}
+
+                    <select
+                      className="bg-[#FDFCFB] border border-[#E5E1DA] px-3 py-1.5 text-xs outline-none focus:border-[#1A1A1A]"
+                      value={newResidentRole}
+                      onChange={e => setNewResidentRole(e.target.value as any)}
+                    >
+                      <option value="propietario">Propietario</option>
+                      <option value="arrendatario">Arrendatario</option>
+                      <option value="cohabitante">Cohabitante</option>
+                    </select>
+
+                    <button
+                      type="submit"
+                      disabled={Boolean(condoId && !isManualResident && unassignedResidents.length === 0)}
+                      className="bg-[#1A1A1A] hover:bg-black text-white text-[9px] font-bold tracking-widest uppercase py-1.5 rounded-none flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Agregar</span>
+                    </button>
+                  </form>
+                </div>
               </div>
 
               {/* Pets & Vehicles grid */}

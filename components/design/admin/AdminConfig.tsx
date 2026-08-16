@@ -8,7 +8,9 @@ import {
   Download, 
   CheckSquare, 
   RefreshCw,
-  Info 
+  Info,
+  Copy,
+  Check
 } from 'lucide-react';
 
 interface AuditLog {
@@ -26,8 +28,17 @@ const INITIAL_AUDIT_LOGS: AuditLog[] = [
   { id: 'log-3', user: 'Contador General (User)', action: 'REGISTRO_EGRESO', module: 'Finanzas', timestamp: '2026-06-24 09:05:40', details: 'Cargó egreso por servicio de limpieza Brillamax ($18,000.00 MXN)' }
 ];
 
-export default function AdminConfig() {
+interface AdminConfigProps {
+  condoId: string | null;
+  condoName: string;
+  condoNit: string;
+  condoAddress: string;
+}
+
+export default function AdminConfig({ condoId, condoName, condoNit, condoAddress }: AdminConfigProps) {
   const [configSubTab, setConfigSubTab] = useState<'roles' | 'audit' | 'condos'>('roles');
+  const [copiedId, setCopiedId] = useState(false);
+  const [copiedNit, setCopiedNit] = useState(false);
   
   // Roles permissions mapping
   const [roles, setRoles] = useState([
@@ -38,7 +49,7 @@ export default function AdminConfig() {
   ]);
 
   // Audit Logs State
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
   // Condo switcher state
   const [currentCondo, setCurrentCondo] = useState('Cerro Verde Residencia');
@@ -238,37 +249,86 @@ export default function AdminConfig() {
           <div className="space-y-6">
             <div>
               <h3 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A] border-b border-[#E5E1DA] pb-2">
-                Gestión Multi-Condominio (Empresas de Administración)
+                Gestión del Condominio e Identificación
               </h3>
-              <p className="text-[10px] text-[#8C857B] mt-0.5">Cambie de desarrollo inmobiliario para auditar y operar en segundos.</p>
+              <p className="text-[10px] text-[#8C857B] mt-0.5">Consulte los códigos de acceso y detalles de su condominio activo.</p>
             </div>
 
-            <div className="p-5 border border-[#E5E1DA] bg-[#F5F2ED]/40 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="space-y-1 text-center sm:text-left">
-                <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B]">Condominio Seleccionado</span>
-                <h4 className="font-serif italic text-xl text-[#1A1A1A] font-normal">{currentCondo}</h4>
+            <div className="p-5 border border-[#E5E1DA] bg-[#F5F2ED]/40 space-y-4 rounded-none">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#E5E1DA] pb-4">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B]">Condominio Activo</span>
+                  <h4 className="font-serif italic text-xl text-[#1A1A1A] font-normal">{condoName || currentCondo}</h4>
+                  {condoAddress && <p className="text-xs text-[#8C857B]">{condoAddress}</p>}
+                </div>
+
+                <div className="flex gap-2">
+                  <select
+                    value={currentCondo}
+                    onChange={e => {
+                      setCurrentCondo(e.target.value);
+                      alert(`Cambiando entorno contable a: ${e.target.value}`);
+                    }}
+                    className="bg-white border border-[#E5E1DA] px-3 py-2 text-xs outline-none focus:border-[#1A1A1A]"
+                  >
+                    {condosList.map((condo, idx) => (
+                      <option key={idx} value={condo}>{condo}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className="flex gap-2">
-                <select
-                  value={currentCondo}
-                  onChange={e => {
-                    setCurrentCondo(e.target.value);
-                    alert(`Cambiando entorno contable a: ${e.target.value}`);
-                  }}
-                  className="bg-white border border-[#E5E1DA] px-3 py-2 text-xs outline-none focus:border-[#1A1A1A]"
-                >
-                  {condosList.map((condo, idx) => (
-                    <option key={idx} value={condo}>{condo}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="bg-white border border-[#E5E1DA] p-4 space-y-2">
+                  <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B] block">Código de Vinculación (UUID)</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-mono font-bold bg-[#F5F2ED] px-2.5 py-1.5 select-all break-all flex-1 border border-[#E5E1DA]">
+                      {condoId || 'No configurado'}
+                    </span>
+                    {condoId && (
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(condoId);
+                          setCopiedId(true);
+                          setTimeout(() => setCopiedId(false), 2000);
+                        }}
+                        className="p-2 border border-[#E5E1DA] hover:bg-[#F5F2ED] text-[#1A1A1A] transition shrink-0 bg-white"
+                        title="Copiar Código UUID"
+                      >
+                        {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white border border-[#E5E1DA] p-4 space-y-2">
+                  <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B] block">NIT / Identificación Fiscal</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-mono font-bold bg-[#F5F2ED] px-2.5 py-1.5 select-all break-all flex-1 border border-[#E5E1DA]">
+                      {condoNit || 'No configurado'}
+                    </span>
+                    {condoNit && (
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(condoNit);
+                          setCopiedNit(true);
+                          setTimeout(() => setCopiedNit(false), 2000);
+                        }}
+                        className="p-2 border border-[#E5E1DA] hover:bg-[#F5F2ED] text-[#1A1A1A] transition shrink-0 bg-white"
+                        title="Copiar NIT/RFC"
+                      >
+                        {copiedNit ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="p-4 bg-white border border-[#E5E1DA] text-xs leading-relaxed flex items-start space-x-2 text-[#8C857B]">
               <Info className="w-4 h-4 text-[#1A1A1A] shrink-0 mt-0.5" />
               <p>
-                Cada condominio cuenta con su propio repositorio en la nube, cuentas STP conciliadas, y padrón de residentes independiente. Su suscripción corporativa le permite hasta 10 condominios activos.
+                Proporcione cualquiera de estos códigos a sus residentes. Al registrarse, podrán vincular su cuenta ingresándolo en su pantalla de inicio de ResidentSmart.
               </p>
             </div>
           </div>

@@ -57,3 +57,10 @@ export async function signup(role: 'RESIDENT' | 'ADMIN', formData: FormData) {
     redirect('/resident')
   }
 }
+
+export async function signout() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  revalidatePath('/', 'layout');
+  redirect('/login');
+}

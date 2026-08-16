@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Wrench, 
   AlertTriangle, 
@@ -55,7 +55,7 @@ export default function AdminMantenimiento({
   );
 
   // Vendors state
-  const [vendors, setVendors] = useState<Vendor[]>(INITIAL_VENDORS);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [vendorName, setVendorName] = useState('');
   const [vendorSpecialty, setVendorSpecialty] = useState('');
   const [vendorContact, setVendorContact] = useState('');
@@ -63,11 +63,39 @@ export default function AdminMantenimiento({
   const [vendorRating, setVendorRating] = useState(5);
 
   // Preventives state
-  const [preventives, setPreventives] = useState(INITIAL_PREVENTIVES);
+  const [preventives, setPreventives] = useState<any[]>([]);
   const [prevEquipment, setPrevEquipment] = useState('');
   const [prevType, setPrevType] = useState('Trimestral');
   const [prevNextDate, setPrevNextDate] = useState('');
   const [prevVendor, setPrevVendor] = useState('');
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedVendors = localStorage.getItem('condo_vendors');
+      setVendors(savedVendors ? JSON.parse(savedVendors) : INITIAL_VENDORS);
+
+      const savedPreventives = localStorage.getItem('condo_preventives');
+      setPreventives(savedPreventives ? JSON.parse(savedPreventives) : INITIAL_PREVENTIVES);
+
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_vendors', JSON.stringify(vendors));
+    }
+  }, [vendors, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_preventives', JSON.stringify(preventives));
+    }
+  }, [preventives, isLoaded]);
 
   // Selected incident details
   const activeIncident = incidents.find(i => i.id === selectedIncidentId);

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Check, 
   X, 
@@ -46,7 +46,7 @@ export default function AdminFinanzas({
   const [activeSubTab, setActiveSubTab] = useState<'approvals' | 'aliquots' | 'conciliation' | 'egress' | 'reserve_fund' | 'gateways'>('approvals');
   
   // Egresses State
-  const [egresses, setEgresses] = useState<Egress[]>(INITIAL_EGRESSES);
+  const [egresses, setEgresses] = useState<Egress[]>([]);
   
   // Egress inputs
   const [egressConcept, setEgressConcept] = useState('');
@@ -55,14 +55,51 @@ export default function AdminFinanzas({
   const [egressRecipient, setEgressRecipient] = useState('');
 
   // Reserve Fund State
-  const [reserveFund, setReserveFund] = useState(340000.00);
+  const [reserveFund, setReserveFund] = useState(0.00);
   const [fundAdjustAmount, setFundAdjustAmount] = useState('');
   const [fundAdjustType, setFundAdjustType] = useState<'add' | 'remove'>('add');
   const [fundAdjustReason, setFundAdjustReason] = useState('');
-  const [fundHistory, setFundHistory] = useState([
-    { id: 'fh-1', amount: 25000.00, type: 'add', reason: 'Aportación mensual ordinaria Junio', date: '2026-06-10' },
-    { id: 'fh-2', amount: 8000.00, type: 'remove', reason: 'Reparación bomba de agua Torre B', date: '2026-05-18' }
-  ]);
+  const [fundHistory, setFundHistory] = useState<any[]>([]);
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEgresses = localStorage.getItem('condo_egresses');
+      setEgresses(savedEgresses ? JSON.parse(savedEgresses) : INITIAL_EGRESSES);
+
+      const savedReserveFund = localStorage.getItem('condo_reserve_fund');
+      setReserveFund(savedReserveFund ? parseFloat(savedReserveFund) : 340000.00);
+
+      const savedFundHistory = localStorage.getItem('condo_fund_history');
+      setFundHistory(savedFundHistory ? JSON.parse(savedFundHistory) : [
+        { id: 'fh-1', amount: 25000.00, type: 'add', reason: 'Aportación mensual ordinaria Junio', date: '2026-06-10' },
+        { id: 'fh-2', amount: 8000.00, type: 'remove', reason: 'Reparación bomba de agua Torre B', date: '2026-05-18' }
+      ]);
+
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_egresses', JSON.stringify(egresses));
+    }
+  }, [egresses, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_reserve_fund', reserveFund.toString());
+    }
+  }, [reserveFund, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_fund_history', JSON.stringify(fundHistory));
+    }
+  }, [fundHistory, isLoaded]);
 
   // Bank reconciliation simulator
   const [reconciledCount, setReconciledCount] = useState(0);
@@ -326,25 +363,9 @@ export default function AdminFinanzas({
                   </thead>
                   <tbody className="divide-y divide-[#E5E1DA]">
                     <tr>
-                      <td className="p-3 font-mono">Torre A - 101</td>
-                      <td className="p-3 font-bold">Martha Gómez</td>
-                      <td className="p-3 font-mono">1.25 %</td>
-                      <td className="p-3 font-mono">$1,850.00 MXN</td>
-                      <td className="p-3"><span className="text-emerald-700 font-bold border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[8px] uppercase">Al día</span></td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 font-mono">Torre B - 402</td>
-                      <td className="p-3 font-bold">Luis Martínez</td>
-                      <td className="p-3 font-mono">1.50 %</td>
-                      <td className="p-3 font-mono">$1,850.00 MXN</td>
-                      <td className="p-3"><span className="text-rose-700 font-bold border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[8px] uppercase">Moroso (1)</span></td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 font-mono">Torre B - 205</td>
-                      <td className="p-3 font-bold">Carlos Ruiz</td>
-                      <td className="p-3 font-mono">1.30 %</td>
-                      <td className="p-3 font-mono">$1,850.00 MXN</td>
-                      <td className="p-3"><span className="text-emerald-700 font-bold border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[8px] uppercase">Al día</span></td>
+                      <td colSpan={5} className="p-8 text-center text-[#8C857B] text-xs font-mono">
+                        No hay cuotas u alícuotas generadas en el condominio aún. Haz clic en &quot;Generar Alícuotas&quot; para crear los estados de cuenta masivos.
+                      </td>
                     </tr>
                   </tbody>
                 </table>

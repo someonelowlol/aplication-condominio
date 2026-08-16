@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Megaphone, 
   MessageSquare, 
@@ -92,22 +92,66 @@ export default function AdminComunidad({ announcements, onAddAnnouncement }: Adm
 
   // Chat State
   const [activeChatUser, setActiveChatUser] = useState<string>('Luis Martínez (402)');
-  const [chats, setChats] = useState<Record<string, ChatMessage[]>>(INITIAL_CHATS);
+  const [chats, setChats] = useState<Record<string, ChatMessage[]>>({});
   const [chatInput, setChatInput] = useState('');
   const [chatImageName, setChatImageName] = useState<string | null>(null);
 
   // Polls State
-  const [polls, setPolls] = useState<Poll[]>(INITIAL_POLLS);
+  const [polls, setPolls] = useState<Poll[]>([]);
   const [newPollTitle, setNewPollTitle] = useState('');
   const [newPollOptions, setNewPollOptions] = useState(['', '']);
   const [newPollIsLegal, setNewPollIsLegal] = useState(false);
 
   // Events State
-  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [events, setEvents] = useState<any[]>([]);
   const [eventTitle, setEventTitle] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
   const [eventType, setEventType] = useState('maintenance');
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedChats = localStorage.getItem('condo_chats');
+      const parsedChats = savedChats ? JSON.parse(savedChats) : INITIAL_CHATS;
+      setChats(parsedChats);
+
+      const savedPolls = localStorage.getItem('condo_polls');
+      setPolls(savedPolls ? JSON.parse(savedPolls) : INITIAL_POLLS);
+
+      const savedEvents = localStorage.getItem('condo_events');
+      setEvents(savedEvents ? JSON.parse(savedEvents) : INITIAL_EVENTS);
+
+      // Determine initial active user based on loaded chats
+      const keys = Object.keys(parsedChats);
+      if (keys.length > 0) {
+        setActiveChatUser(keys[0]);
+      }
+
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_chats', JSON.stringify(chats));
+    }
+  }, [chats, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_polls', JSON.stringify(polls));
+    }
+  }, [polls, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('condo_events', JSON.stringify(events));
+    }
+  }, [events, isLoaded]);
 
   // Action: Add Announcement
   const handlePublishAnnouncement = (e: React.FormEvent) => {

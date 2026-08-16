@@ -8,7 +8,9 @@ import {
   Bell, 
   ArrowUpRight, 
   ArrowDownRight, 
-  TrendingUp 
+  TrendingUp,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Payment, Booking, Incident } from '@/lib/types';
 
@@ -17,9 +19,25 @@ interface AdminDashboardProps {
   bookings: Booking[];
   incidents: Incident[];
   onTabChange: (tabId: string) => void;
+  initialBalance?: number;
+  condoId?: string | null;
+  condoName?: string;
+  condoNit?: string;
 }
 
-export default function AdminDashboard({ payments, bookings, incidents, onTabChange }: AdminDashboardProps) {
+export default function AdminDashboard({ 
+  payments, 
+  bookings, 
+  incidents, 
+  onTabChange, 
+  initialBalance = 0,
+  condoId = null,
+  condoName = '',
+  condoNit = ''
+}: AdminDashboardProps) {
+  const [copiedId, setCopiedId] = React.useState(false);
+  const [copiedNit, setCopiedNit] = React.useState(false);
+
   // Compute KPIs
   const paidPayments = payments.filter(p => p.status === 'paid');
   const pendingPayments = payments.filter(p => p.status === 'pending');
@@ -29,8 +47,8 @@ export default function AdminDashboard({ payments, bookings, incidents, onTabCha
   const totalPaid = paidPayments.reduce((sum, p) => sum + p.amount, 0);
   const totalDelinquent = pendingPayments.reduce((sum, p) => sum + p.amount, 0);
 
-  // Bank balance simulator (fixed base + paid amount)
-  const bankBalance = 1245600.00 + totalPaid;
+  // Bank balance calculated from wizard initialBalance + paid amounts
+  const bankBalance = initialBalance + totalPaid;
 
   const openTicketsCount = incidents.filter(i => i.status !== 'resolved').length;
   const pendingBookingsCount = bookings.filter(b => b.status === 'pending').length;
@@ -47,6 +65,57 @@ export default function AdminDashboard({ payments, bookings, incidents, onTabCha
         <span className="text-[10px] font-mono tracking-[0.25em] text-[#8C857B] uppercase block">Resumen General</span>
         <h1 className="text-3xl font-serif italic text-[#1A1A1A] font-normal">Panel de Control Operativo</h1>
       </div>
+
+      {/* CONDO CONNECTION CODE BANNER */}
+      {condoId && (
+        <div className="bg-[#F5F2ED] border border-[#E5E1DA] p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-none animate-fade-in">
+          <div className="space-y-1">
+            <span className="text-[9px] font-mono tracking-widest text-[#8C857B] uppercase block">Identidad y Códigos de Vinculación</span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-[#8C857B] uppercase font-bold">Código (UUID):</span>
+                <span className="text-[11px] font-mono font-bold bg-white px-2 py-0.5 border border-[#E5E1DA] select-all">
+                  {condoId}
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(condoId);
+                    setCopiedId(true);
+                    setTimeout(() => setCopiedId(false), 2000);
+                  }}
+                  className="text-[#8C857B] hover:text-[#1A1A1A] transition p-0.5"
+                  title="Copiar UUID"
+                >
+                  {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              {condoNit && (
+                <div className="flex items-center gap-2 border-l border-[#E5E1DA] pl-4">
+                  <span className="text-[10px] text-[#8C857B] uppercase font-bold">NIT / RFC:</span>
+                  <span className="text-[11px] font-mono font-bold bg-white px-2 py-0.5 border border-[#E5E1DA] select-all">
+                    {condoNit}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(condoNit);
+                      setCopiedNit(true);
+                      setTimeout(() => setCopiedNit(false), 2000);
+                    }}
+                    className="text-[#8C857B] hover:text-[#1A1A1A] transition p-0.5"
+                    title="Copiar NIT/RFC"
+                  >
+                    {copiedNit ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="text-[9px] text-[#8C857B] bg-white border border-[#E5E1DA] px-2.5 py-1 uppercase tracking-wider font-bold">
+            Copropiedad Activa: {condoName || 'Registrada'}
+          </div>
+        </div>
+      )}
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

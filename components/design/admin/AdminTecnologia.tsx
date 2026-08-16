@@ -30,24 +30,17 @@ export default function AdminTecnologia() {
   
   // AI assistant states
   const [aiChat, setAiChat] = useState<ChatMsg[]>([
-    { sender: 'ai', text: 'Hola, Manuel. Soy el Asistente AI de ResidenSmart. Puedo redactar circulares, analizar morosidad en tiempo real, o redactar multas según el reglamento. ¿En qué te ayudo hoy?' }
+    { sender: 'ai', text: 'Hola. Soy el Asistente AI de ResidenSmart. Puedo redactar circulares, analizar la información del condominio en tiempo real o redactar comunicados según el reglamento. ¿En qué te ayudo hoy?' }
   ]);
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
 
   // IoT smart meters states
-  const [iotUnits, setIotUnits] = useState([
-    { unit: '101 (M. Gómez)', water: 12.4, power: 185, leakWarning: false },
-    { unit: '402 (L. Martínez)', water: 25.8, power: 340, leakWarning: true }, // high water usage
-    { unit: '205 (C. Ruiz)', water: 9.1, power: 142, leakWarning: false }
-  ]);
+  const [iotUnits, setIotUnits] = useState<any[]>([]);
 
   // Digital Signatures state
-  const [contracts, setContracts] = useState<Contract[]>([
-    { id: 'c-1', title: 'Acta de Asamblea Extraordinaria - Jun 2026', type: 'Asamblea Actas', status: 'pending', date: '2026-06-15' },
-    { id: 'c-2', title: 'Contrato Mantenimiento Elevadores - Otis 2026', type: 'Contratos Proveedor', status: 'pending', date: '2026-06-24' }
-  ]);
-  const [selectedContractId, setSelectedContractId] = useState<string | null>('c-2');
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [typedSignature, setTypedSignature] = useState('');
 
   // ACTION: AI Query Answer Simulation

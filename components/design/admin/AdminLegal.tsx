@@ -51,16 +51,16 @@ export default function AdminLegal({ onAddCustomPayment }: AdminLegalProps) {
   const [legalSubTab, setLegalSubTab] = useState<'docs' | 'fines'>('docs');
   
   // Documents State
-  const [docs, setDocs] = useState<LegalDoc[]>(INITIAL_DOCS);
+  const [docs, setDocs] = useState<LegalDoc[]>([]);
   const [newDocName, setNewDocName] = useState('');
   const [newDocCategory, setNewDocCategory] = useState<'bylaws' | 'assembly' | 'plans' | 'insurance'>('bylaws');
 
   // Fines State
-  const [fines, setFines] = useState<FineInfraction[]>(INITIAL_FINES);
-  const [fineUnit, setFineUnit] = useState('Torre B - 402');
+  const [fines, setFines] = useState<FineInfraction[]>([]);
+  const [fineUnit, setFineUnit] = useState('');
   const [fineType, setFineType] = useState('Exceso de Ruido');
   const [fineDescription, setFineDescription] = useState('');
-  const [fineAmount, setFineAmount] = useState('1000');
+  const [fineAmount, setFineAmount] = useState('');
   const [finePhotoAttached, setFinePhotoAttached] = useState(false);
 
   // ACTION: Add Legal Document
