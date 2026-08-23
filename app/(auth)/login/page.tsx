@@ -6,11 +6,14 @@ import { login, signup } from './actions';
 import { Building2, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/design/Logo';
+import { useLanguage } from '@/components/design/LanguageProvider';
+import LanguageSelector from '@/components/design/LanguageSelector';
 
 function LoginFormContent() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get('error');
   const messageParam = searchParams.get('message');
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,25 +29,25 @@ function LoginFormContent() {
 
     if (messageParam) {
       if (messageParam.includes('Signup requires a valid email')) {
-        return 'El registro requiere un correo electrónico válido.';
+        return t('login.error.valid_email_req', 'El registro requiere un correo electrónico válido.');
       }
       if (messageParam.includes('Password should be at least 6 characters')) {
-        return 'La contraseña debe tener al menos 6 caracteres.';
+        return t('login.error.pwd_min', 'La contraseña debe tener al menos 6 caracteres.');
       }
       if (messageParam.includes('User already registered') || messageParam.includes('already exists')) {
-        return 'El correo ya está registrado. Intenta iniciar sesión.';
+        return t('login.error.already_registered', 'El correo ya está registrado. Intenta iniciar sesión.');
       }
       if (messageParam.includes('Invalid login credentials')) {
-        return 'Correo o contraseña incorrectos. Intenta nuevamente.';
+        return t('login.error.invalid_credentials', 'Correo o contraseña incorrectos. Intenta nuevamente.');
       }
       return messageParam;
     }
 
     if (errorParam === 'InvalidCredentials') {
-      return 'Correo o contraseña incorrectos. Intenta nuevamente.';
+      return t('login.error.invalid_credentials', 'Correo o contraseña incorrectos. Intenta nuevamente.');
     }
     if (errorParam === 'SignupFailed') {
-      return 'No se pudo crear la cuenta. El correo ya puede estar registrado o la contraseña es muy corta.';
+      return t('login.error.signup_failed', 'No se pudo crear la cuenta. El correo ya puede estar registrado o la contraseña es muy corta.');
     }
     return null;
   };
@@ -55,11 +58,11 @@ function LoginFormContent() {
     e.preventDefault();
     setLocalError(null);
     if (!email) {
-      setLocalError('Por favor, ingresa tu correo electrónico.');
+      setLocalError(t('login.error.email_req', 'Por favor, ingresa tu correo electrónico.'));
       return;
     }
     if (!password) {
-      setLocalError('Por favor, ingresa tu contraseña.');
+      setLocalError(t('login.error.pwd_req', 'Por favor, ingresa tu contraseña.'));
       return;
     }
     setCurrentAction('login');
@@ -75,15 +78,15 @@ function LoginFormContent() {
     e.preventDefault();
     setLocalError(null);
     if (!email) {
-      setLocalError('Por favor, ingresa tu correo electrónico para crear la cuenta de residente.');
+      setLocalError(t('login.error.email_req', 'Por favor, ingresa tu correo electrónico.'));
       return;
     }
     if (!password) {
-      setLocalError('Por favor, ingresa una contraseña.');
+      setLocalError(t('login.error.pwd_req', 'Por favor, ingresa tu contraseña.'));
       return;
     }
     if (password.length < 6) {
-      setLocalError('La contraseña para registrarte debe tener al menos 6 caracteres.');
+      setLocalError(t('login.error.pwd_length', 'La contraseña para registrarte debe tener al menos 6 caracteres.'));
       return;
     }
     setCurrentAction('signup-resident');
@@ -99,15 +102,15 @@ function LoginFormContent() {
     e.preventDefault();
     setLocalError(null);
     if (!email) {
-      setLocalError('Por favor, ingresa tu correo electrónico para crear la cuenta de administrador.');
+      setLocalError(t('login.error.email_req', 'Por favor, ingresa tu correo electrónico.'));
       return;
     }
     if (!password) {
-      setLocalError('Por favor, ingresa una contraseña.');
+      setLocalError(t('login.error.pwd_req', 'Por favor, ingresa tu contraseña.'));
       return;
     }
     if (password.length < 6) {
-      setLocalError('La contraseña para registrarte debe tener al menos 6 caracteres.');
+      setLocalError(t('login.error.pwd_length', 'La contraseña para registrarte debe tener al menos 6 caracteres.'));
       return;
     }
     setCurrentAction('signup-admin');
@@ -124,8 +127,12 @@ function LoginFormContent() {
 
       <Link href="/" className="absolute top-6 left-6 text-[#1A1A1A] hover:bg-[#F5F2ED] border border-[#E5E1DA] p-2 transition bg-white flex items-center text-[10px] font-bold tracking-widest uppercase">
         <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-        Volver
+        {t('nav.back', 'Volver')}
       </Link>
+
+      <div className="absolute top-6 right-6">
+        <LanguageSelector />
+      </div>
 
       <div className="w-full max-w-md relative z-10 bg-white border border-[#E5E1DA] p-8 md:p-10 shadow-none rounded-none">
         
@@ -134,7 +141,7 @@ function LoginFormContent() {
           <div className="flex justify-center mb-4">
             <div className="inline-flex items-center space-x-1.5 bg-[#F5F2ED] text-brand-blue px-3 py-1 text-[9px] font-bold tracking-widest uppercase border border-[#E5E1DA]/50">
               <Building2 className="w-3.5 h-3.5" />
-              <span>Acceso de Seguridad</span>
+              <span>{t('login.security_access', 'Acceso de Seguridad')}</span>
             </div>
           </div>
           
@@ -145,9 +152,9 @@ function LoginFormContent() {
 
         {/* Form Container */}
         <div>
-          <h2 className="text-lg font-bold text-[#1A1A1A] mb-2 font-serif italic">Bienvenido</h2>
+          <h2 className="text-lg font-bold text-[#1A1A1A] mb-2 font-serif italic">{t('login.title', 'Bienvenido')}</h2>
           <p className="text-xs mb-6 text-[#8C857B]">
-            Ingresa tus credenciales para acceder a tu panel de control.
+            {t('login.subtitle', 'Ingresa tus credenciales para acceder a tu panel de control.')}
           </p>
 
           {/* Error banner */}
@@ -162,7 +169,7 @@ function LoginFormContent() {
             {/* Email */}
             <div className="mb-5">
               <label htmlFor="email" className="block text-[10px] font-bold mb-1.5 text-[#1A1A1A] tracking-widest uppercase">
-                Correo electrónico
+                {t('login.email', 'Correo electrónico')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8C857B]">
@@ -177,7 +184,7 @@ function LoginFormContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-none text-sm text-[#1A1A1A] placeholder-[#8C857B]/50 outline-none transition-all bg-[#FDFCFB] border border-[#E5E1DA] focus:border-[#1A1A1A]"
-                  placeholder="tucorreo@ejemplo.com"
+                  placeholder={t('login.email_placeholder', 'tucorreo@ejemplo.com')}
                 />
               </div>
             </div>
@@ -185,7 +192,7 @@ function LoginFormContent() {
             {/* Password */}
             <div className="mb-8">
               <label htmlFor="password" className="block text-[10px] font-bold mb-1.5 text-[#1A1A1A] tracking-widest uppercase">
-                Contraseña
+                {t('login.password', 'Contraseña')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8C857B]">
@@ -200,7 +207,7 @@ function LoginFormContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 rounded-none text-sm text-[#1A1A1A] placeholder-[#8C857B]/50 outline-none transition-all bg-[#FDFCFB] border border-[#E5E1DA] focus:border-[#1A1A1A]"
-                  placeholder="••••••••"
+                  placeholder={t('login.password_placeholder', '••••••••')}
                 />
                 <button
                   type="button"
@@ -217,13 +224,13 @@ function LoginFormContent() {
               type="submit"
               form="login-form"
               disabled={isPending}
-              className="w-full py-3.5 text-[10px] font-bold tracking-widest uppercase text-white transition-all duration-200 flex items-center justify-center gap-2 mb-6 rounded-none cursor-pointer"
+              className="w-full py-3.5 text-[10px] font-bold tracking-widest uppercase text-white transition-all duration-200 flex items-center justify-center gap-2 mb-6 rounded-none cursor-pointer border-none outline-none"
               style={{ background: isPending && currentAction === 'login' ? '#8C857B' : '#0D305F', opacity: isPending && currentAction !== 'login' ? 0.7 : 1 }}
             >
               {isPending && currentAction === 'login' ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {t('login.submit_processing', 'Procesando...')}</>
               ) : (
-                'Iniciar Sesión'
+                t('login.submit', 'Iniciar Sesión')
               )}
             </button>
           </form>
@@ -231,7 +238,7 @@ function LoginFormContent() {
           {/* Divider */}
           <div className="flex items-center gap-3 mb-6">
             <div className="flex-1 h-px bg-[#E5E1DA]" />
-            <span className="text-[9px] uppercase tracking-widest font-bold text-[#8C857B]">o crear cuenta de prueba</span>
+            <span className="text-[9px] uppercase tracking-widest font-bold text-[#8C857B]">{t('login.or_create', 'o crear cuenta de prueba')}</span>
             <div className="flex-1 h-px bg-[#E5E1DA]" />
           </div>
 
@@ -241,31 +248,31 @@ function LoginFormContent() {
               type="button"
               disabled={isPending}
               onClick={handleSignupResident}
-              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-brand-blue hover:bg-brand-blue hover:text-white"
+              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-brand-blue hover:bg-brand-blue hover:text-white cursor-pointer"
             >
               {isPending && currentAction === 'signup-resident' ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : null}
-              <span>Nuevo Residente</span>
+              <span>{t('login.new_resident', 'Nuevo Residente')}</span>
             </button>
 
             <button
               type="button"
               disabled={isPending}
               onClick={handleSignupAdmin}
-              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-brand-blue hover:bg-brand-blue hover:text-white"
+              className="w-full py-3 rounded-none text-[9px] font-bold tracking-widest uppercase transition-all duration-200 flex items-center justify-center gap-1.5 bg-[#F5F2ED] border border-[#E5E1DA] text-brand-blue hover:bg-brand-blue hover:text-white cursor-pointer"
             >
               {isPending && currentAction === 'signup-admin' ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : null}
-              <span>Nuevo Admin</span>
+              <span>{t('login.new_admin', 'Nuevo Admin')}</span>
             </button>
           </div>
         </div>
       </div>
       
       <p className="absolute bottom-6 text-center text-[9px] tracking-widest uppercase font-bold text-[#8C857B]">
-        © {new Date().getFullYear()} ResidenSmart
+        © {new Date().getFullYear()} {t('login.copyright', 'ResidenSmart Portal')}
       </p>
     </div>
   );

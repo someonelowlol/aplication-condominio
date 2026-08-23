@@ -21,6 +21,8 @@ import {
 import { Resident } from '@/lib/types';
 import Logo from './Logo';
 import { signout } from '@/app/(auth)/login/actions';
+import { useLanguage } from './LanguageProvider';
+import LanguageSelector from './LanguageSelector';
 
 interface NavbarProps {
   currentTab: string;
@@ -43,6 +45,7 @@ export default function Navbar({
   isAdmin = false,
   onUpdateResident
 }: NavbarProps) {
+  const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [editProfileOpen, setEditProfileOpen] = React.useState(false);
   const [editName, setEditName] = React.useState(resident.name);
@@ -75,17 +78,17 @@ export default function Navbar({
   };
 
   const navItems = isAdmin ? ([
-    { id: 'dashboard', label: 'Inicio', icon: Home, badge: 0 },
-    { id: 'payments', label: 'Aprobar Pagos', icon: CreditCard, badge: pendingPaymentsCount },
-    { id: 'bookings', label: 'Gestionar Reservas', icon: Calendar, badge: activeBookingsCount },
-    { id: 'incidents', label: 'Ver Reportes', icon: AlertOctagon, badge: activeIncidentsCount },
-    { id: 'directory', label: 'Directorio', icon: Briefcase, badge: 0 }
+    { id: 'dashboard', label: t('nav.home', 'Inicio'), icon: Home, badge: 0 },
+    { id: 'payments', label: t('nav.payments_admin', 'Aprobar Pagos'), icon: CreditCard, badge: pendingPaymentsCount },
+    { id: 'bookings', label: t('nav.bookings_admin', 'Gestionar Reservas'), icon: Calendar, badge: activeBookingsCount },
+    { id: 'incidents', label: t('nav.incidents_admin', 'Ver Reportes'), icon: AlertOctagon, badge: activeIncidentsCount },
+    { id: 'directory', label: t('nav.directory', 'Directorio'), icon: Briefcase, badge: 0 }
   ] as const) : ([
-    { id: 'dashboard', label: 'Inicio', icon: Home, badge: 0 },
-    { id: 'payments', label: 'Pagos', icon: CreditCard, badge: pendingPaymentsCount },
-    { id: 'bookings', label: 'Reservar Área', icon: Calendar, badge: activeBookingsCount },
-    { id: 'incidents', label: 'Incidentes', icon: AlertOctagon, badge: activeIncidentsCount },
-    { id: 'directory', label: 'Directorio', icon: Briefcase, badge: 0 }
+    { id: 'dashboard', label: t('nav.home', 'Inicio'), icon: Home, badge: 0 },
+    { id: 'payments', label: t('nav.payments', 'Pagos'), icon: CreditCard, badge: pendingPaymentsCount },
+    { id: 'bookings', label: t('nav.bookings', 'Reservar Área'), icon: Calendar, badge: activeBookingsCount },
+    { id: 'incidents', label: t('nav.incidents', 'Incidentes'), icon: AlertOctagon, badge: activeIncidentsCount },
+    { id: 'directory', label: t('nav.directory', 'Directorio'), icon: Briefcase, badge: 0 }
   ] as const);
 
   const handleNavClick = (tabId: 'dashboard' | 'payments' | 'bookings' | 'incidents' | 'directory') => {
@@ -131,10 +134,14 @@ export default function Navbar({
 
           {/* User profile actions */}
           <div className="hidden md:flex items-center space-x-6">
+            <LanguageSelector />
+
+            <span className="h-6 w-px bg-[#E5E1DA]"></span>
+
             <button 
-              onClick={() => alert('No tienes notificaciones administrativas sin leer.')}
-              className="p-2 text-[#8C857B] hover:text-[#1A1A1A] rounded-full hover:bg-[#F5F2ED] transition relative"
-              title="Notificaciones"
+              onClick={() => alert(t('nav.notifications_none', 'No tienes notificaciones administrativas sin leer.'))}
+              className="p-2 text-[#8C857B] hover:text-[#1A1A1A] rounded-full hover:bg-[#F5F2ED] transition relative cursor-pointer"
+              title={t('nav.notifications', 'Notificaciones')}
             >
               <Bell className="w-4.5 h-4.5" />
               {pendingPaymentsCount > 0 && (
@@ -148,7 +155,7 @@ export default function Navbar({
               <button
                 onClick={() => setEditProfileOpen(true)}
                 className="h-8 w-8 rounded-full bg-[#E5E1DA] flex items-center justify-center border border-[#CEC7BC] overflow-hidden shrink-0 hover:ring-2 hover:ring-[#0D9488] transition cursor-pointer relative group"
-                title="Editar Nombre y Foto de Perfil"
+                title={t('nav.profile', 'Editar Nombre y Foto de Perfil')}
               >
                 <img 
                   src={resident.avatar} 
@@ -167,20 +174,20 @@ export default function Navbar({
                   </span>
                   <button
                     onClick={() => setEditProfileOpen(true)}
-                    className="text-[#8C857B] hover:text-[#1A1A1A] transition"
-                    title="Editar Perfil"
+                    className="text-[#8C857B] hover:text-[#1A1A1A] transition cursor-pointer"
+                    title={t('nav.profile', 'Editar Perfil')}
                   >
                     <Edit2 className="w-3 h-3" />
                   </button>
                 </div>
                 <span className="text-[9px] text-[#8C857B] uppercase tracking-widest block leading-none font-medium mt-0.5">
-                  {isAdmin ? 'Administración' : `${resident.tower} • ${resident.apartment}`}
+                  {isAdmin ? t('login.security_access', 'Administración') : `${resident.tower} • ${resident.apartment}`}
                 </span>
               </div>
               <button
                 onClick={() => signout()}
-                className="p-1.5 text-[#8C857B] hover:text-rose-600 rounded-none hover:bg-rose-50 border border-[#E5E1DA] transition"
-                title="Cerrar Sesión"
+                className="p-1.5 text-[#8C857B] hover:text-rose-600 rounded-none hover:bg-rose-50 border border-[#E5E1DA] transition cursor-pointer"
+                title={t('nav.logout', 'Cerrar Sesión')}
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
@@ -189,16 +196,18 @@ export default function Navbar({
 
           {/* Mobile menu trigger button */}
           <div className="md:hidden flex items-center space-x-2">
+            <LanguageSelector />
+
             <button 
-              onClick={() => alert(isAdmin ? 'Bienvenido Administrador a la plataforma ResidenSmart.' : `Bienvenido ${resident.name}. Estás conectado desde ${resident.tower}, ${resident.apartment}.`)}
-              className="p-1 px-2.5 bg-[#F5F2ED] border border-[#E5E1DA] rounded-none text-[10px] font-bold tracking-widest text-[#1A1A1A]"
+              onClick={() => alert(isAdmin ? t('login.welcome_admin', 'Bienvenido Administrador a la plataforma ResidenSmart.') : t('login.welcome_resident', 'Bienvenido') + ` ${resident.name}. ` + t('login.connected_from', 'Estás conectado desde') + ` ${resident.tower}, ${resident.apartment}.`)}
+              className="p-1 px-2.5 bg-[#F5F2ED] border border-[#E5E1DA] rounded-none text-[10px] font-bold tracking-widest text-[#1A1A1A] cursor-pointer"
             >
               <span className="font-mono">{isAdmin ? 'ADMIN' : resident.apartment}</span>
             </button>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-[#1A1A1A] hover:bg-[#F5F2ED] transition"
+              className="p-2 text-[#1A1A1A] hover:bg-[#F5F2ED] transition cursor-pointer"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -252,19 +261,19 @@ export default function Navbar({
                   </div>
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#1A1A1A] block">
-                      {isAdmin ? 'Administrador' : resident.name}
+                      {isAdmin ? t('login.new_admin', 'Administrador') : resident.name}
                     </span>
                     <span className="text-[9px] text-[#8C857B] tracking-widest uppercase block">
-                      {isAdmin ? 'Administración' : `${resident.tower} • ${resident.apartment}`}
+                      {isAdmin ? t('login.security_access', 'Administración') : `${resident.tower} • ${resident.apartment}`}
                     </span>
                   </div>
                 </div>
                 <button
                   onClick={() => signout()}
-                  className="p-2 text-[#8C857B] hover:text-rose-600 border border-[#E5E1DA] bg-white text-[9px] font-bold tracking-widest uppercase flex items-center gap-1"
+                  className="p-2 text-[#8C857B] hover:text-rose-600 border border-[#E5E1DA] bg-white text-[9px] font-bold tracking-widest uppercase flex items-center gap-1 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Salir</span>
+                  <span>{t('nav.logout', 'Salir')}</span>
                 </button>
               </div>
             </div>
@@ -284,12 +293,12 @@ export default function Navbar({
             >
               <div className="flex justify-between items-center border-b border-[#E5E1DA] pb-4">
                 <div>
-                  <h3 className="text-base font-serif italic text-[#1A1A1A]">Editar Perfil de Usuario</h3>
-                  <p className="text-[10px] text-[#8C857B] uppercase tracking-wider font-mono">Personaliza tu nombre y foto de perfil</p>
+                  <h3 className="text-base font-serif italic text-[#1A1A1A]">{t('nav.profile_edit_title', 'Editar Perfil de Usuario')}</h3>
+                  <p className="text-[10px] text-[#8C857B] uppercase tracking-wider font-mono">{t('nav.profile_edit_subtitle', 'Personaliza tu nombre y foto de perfil')}</p>
                 </div>
                 <button
                   onClick={() => setEditProfileOpen(false)}
-                  className="p-1 text-[#8C857B] hover:text-[#1A1A1A]"
+                  className="p-1 text-[#8C857B] hover:text-[#1A1A1A] cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -298,21 +307,21 @@ export default function Navbar({
               <form onSubmit={handleSaveProfile} className="space-y-4">
                 <div>
                   <label className="block text-[9px] font-bold uppercase tracking-widest text-[#8C857B] mb-1.5">
-                    Nombre Completo
+                    {t('nav.profile_name_label', 'Nombre Completo')}
                   </label>
                   <input
                     type="text"
                     required
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Tu nombre completo"
+                    placeholder={t('nav.profile_name_placeholder', 'Tu nombre completo')}
                     className="w-full bg-[#FDFCFB] border border-[#E5E1DA] px-3.5 py-2 text-xs text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[9px] font-bold uppercase tracking-widest text-[#8C857B] mb-1.5">
-                    Seleccionar Foto de Perfil (Avatares)
+                    {t('nav.profile_avatar_select', 'Seleccionar Foto de Perfil (Avatares)')}
                   </label>
                   <div className="grid grid-cols-6 gap-2 mb-3">
                     {avatarPresets.map((url, idx) => (
@@ -320,7 +329,7 @@ export default function Navbar({
                         type="button"
                         key={idx}
                         onClick={() => setEditAvatar(url)}
-                        className={`h-10 w-10 rounded-full border overflow-hidden relative transition ${
+                        className={`h-10 w-10 rounded-full border overflow-hidden relative transition cursor-pointer ${
                           editAvatar === url ? 'ring-2 ring-[#0D9488] border-transparent scale-105' : 'border-[#E5E1DA] opacity-70 hover:opacity-100'
                         }`}
                       >
@@ -335,7 +344,7 @@ export default function Navbar({
                   </div>
 
                   <label className="block text-[9px] font-bold uppercase tracking-widest text-[#8C857B] mb-1.5">
-                    O Ingresa una URL de Imagen Personalizada
+                    {t('nav.profile_avatar_url', 'O Ingresa una URL de Imagen Personalizada')}
                   </label>
                   <input
                     type="text"
@@ -350,15 +359,15 @@ export default function Navbar({
                   <button
                     type="button"
                     onClick={() => setEditProfileOpen(false)}
-                    className="px-4 py-2 border border-[#E5E1DA] text-[10px] font-bold uppercase tracking-widest text-[#8C857B] hover:bg-[#F5F2ED]"
+                    className="px-4 py-2 border border-[#E5E1DA] text-[10px] font-bold uppercase tracking-widest text-[#8C857B] hover:bg-[#F5F2ED] cursor-pointer"
                   >
-                    Cancelar
+                    {t('lang.btn_cancel', 'Cancelar')}
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold uppercase tracking-widest transition"
+                    className="px-5 py-2 bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold uppercase tracking-widest transition cursor-pointer"
                   >
-                    Guardar Cambios
+                    {t('nav.profile_save', 'Guardar Cambios')}
                   </button>
                 </div>
               </form>

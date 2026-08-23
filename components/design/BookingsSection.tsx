@@ -22,6 +22,7 @@ import {
   Info
 } from 'lucide-react';
 import { Amenity, Booking } from '@/lib/types';
+import { useLanguage } from './LanguageProvider';
 
 interface BookingsSectionProps {
   amenities: Amenity[];
@@ -45,6 +46,7 @@ export default function BookingsSection({
   onAddBooking,
   onCancelBooking 
 }: BookingsSectionProps) {
+  const { t, currentLanguage } = useLanguage();
   const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
   
   // Form states
@@ -56,7 +58,10 @@ export default function BookingsSection({
   // Quick lists of dates to reserve (today & next 4 days)
   const getSimulatedDates = () => {
     const dates = [];
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const days = currentLanguage === 'en'
+      ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      : ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    
     for (let i = 0; i < 5; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
@@ -129,13 +134,13 @@ export default function BookingsSection({
       {/* SECCIÓN JUEGO: MIS RESERVAS VIGENTES */}
       <div className="space-y-4">
         <div className="border-b border-[#E5E1DA] pb-2 mb-4 text-left">
-          <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">Mis Reservas Activas</h2>
+          <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">{t('bookings.title', 'Mis Reservas Activas')}</h2>
         </div>
         
         {bookings.length === 0 ? (
           <div className="bg-[#F5F2ED] border border-[#E5E1DA] p-8 text-center text-[#8C857B] rounded-none">
             <CalendarIcon className="w-8 h-8 text-[#8C857B] mx-auto mb-2" />
-            <p className="text-xs font-serif italic text-[#8C857B]">No tienes ninguna reserva activa programada.</p>
+            <p className="text-xs font-serif italic text-[#8C857B]">{t('bookings.no_bookings', 'No tienes ninguna reserva activa programada.')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -170,11 +175,11 @@ export default function BookingsSection({
                   <div className="mt-4 pt-4 border-t border-[#E5E1DA] flex items-center justify-between text-xs text-[#8C857B]">
                     <div className="flex items-center text-[10px] font-bold uppercase tracking-wider">
                       <Users className="w-3.5 h-3.5 mr-1 text-[#8C857B]" />
-                      {b.guestCount} {b.guestCount === 1 ? 'Invitado' : 'Invitados'}
+                      {b.guestCount} {b.guestCount === 1 ? t('bookings.guest_count_single', 'Invitado') : t('bookings.guest_count_plural', 'Invitados')}
                     </div>
 
                     <div className="text-[#1A1A1A] font-serif font-bold">
-                      {b.totalCost > 0 ? formatCurrency(b.totalCost) : 'Gratuito'}
+                      {b.totalCost > 0 ? formatCurrency(b.totalCost) : t('bookings.cost_free', 'Gratuito')}
                     </div>
                   </div>
 
@@ -182,17 +187,17 @@ export default function BookingsSection({
                   <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#E5E1DA] pt-4">
                     {b.status === 'confirmed' && (
                       <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase bg-[#E1EFE0] text-[#1D5E22] border border-[#C2E0C0]">
-                        Confirmada
+                        {t('bookings.status_confirmed', 'Confirmada')}
                       </span>
                     )}
                     {b.status === 'pending' && (
                       <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase bg-[#FDF3E1] text-[#7A5A18] border border-[#FBE3B8] animate-pulse">
-                        Sujeto a Aprobación
+                        {t('bookings.status_pending', 'Sujeto a Aprobación')}
                       </span>
                     )}
                     {b.status === 'cancelled' && (
                       <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase bg-slate-50 text-[#8C857B] border border-[#E5E1DA]">
-                        Cancelada
+                        {t('bookings.status_cancelled', 'Cancelada')}
                       </span>
                     )}
 
@@ -202,10 +207,10 @@ export default function BookingsSection({
                           id={`btn-qr-${b.id}`}
                           onClick={() => setShowQRBooking(b)}
                           className="bg-white hover:bg-[#F5F2ED] border border-[#E5E1DA] text-[#1A1A1A] px-2.5 py-1.5 transition text-[9px] font-bold uppercase tracking-wider flex items-center space-x-1 rounded-none cursor-pointer"
-                          title="Ver pase de acceso QR"
+                          title={t('bookings.qr_pass', 'Pase QR')}
                         >
                           <QrCode className="w-3.5 h-3.5" />
-                          <span>Pase QR</span>
+                          <span>{t('bookings.qr_pass', 'Pase QR')}</span>
                         </button>
                       )}
 
@@ -213,12 +218,12 @@ export default function BookingsSection({
                         <button
                           id={`btn-cancel-book-${b.id}`}
                           onClick={() => {
-                            if (confirm('¿Estás seguro de cancelar esta reserva? El dinero o saldo cargado se reembolsará automáticamente.')) {
+                            if (confirm(t('bookings.cancel_confirm', '¿Estás seguro de cancelar esta reserva? El dinero o saldo cargado se reembolsará automáticamente.'))) {
                               onCancelBooking(b.id);
                             }
                           }}
                           className="text-[#8C857B] hover:text-rose-700 hover:bg-[#F5F2ED] p-2 border border-[#E5E1DA] transition rounded-none cursor-pointer"
-                          title="Cancelar reserva"
+                          title={t('bookings.cancel_btn', 'Cancelar reserva')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -235,8 +240,8 @@ export default function BookingsSection({
       {/* CATÁLOGO DE ÁREAS COMUNES */}
       <div className="space-y-6">
         <div className="border-b border-[#E5E1DA] pb-2 text-left">
-          <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">Áreas Comunes Disponibles</h2>
-          <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">Planifica y reserva los mejores espacios de ResidenSmart</p>
+          <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">{t('bookings.catalog_title', 'Áreas Comunes Disponibles')}</h2>
+          <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">{t('bookings.catalog_subtitle', 'Planifica y reserva los mejores espacios de ResidenSmart')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -261,7 +266,7 @@ export default function BookingsSection({
                   </div>
 
                   <div className="absolute bottom-3 right-3 bg-[#1A1A1A] text-white px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase">
-                    {am.hourlyRate > 0 ? `${formatCurrency(am.hourlyRate)}/hr` : 'Gratuito'}
+                    {am.hourlyRate > 0 ? `${formatCurrency(am.hourlyRate)}/hr` : t('bookings.cost_free', 'Gratuito')}
                   </div>
                 </div>
 
@@ -273,11 +278,11 @@ export default function BookingsSection({
                     <div className="flex items-center space-x-4 text-[10px] text-[#8C857B] font-bold uppercase tracking-wider pt-1">
                       <span className="flex items-center">
                         <Users className="w-3.5 h-3.5 mr-1 text-[#8C857B]" />
-                        Aforo máx: &nbsp;<strong className="text-[#1A1A1A]">{am.capacity} pers.</strong>
+                        {t('bookings.max_capacity', 'Aforo máx')}: &nbsp;<strong className="text-[#1A1A1A]">{am.capacity} {t('bookings.people', 'pers.')}</strong>
                       </span>
                       {am.requiresReview && (
                         <span className="flex items-center text-[#1D5E22] bg-[#E1EFE0] px-2 py-0.5 border border-[#C2E0C0]">
-                          <Sparkles className="w-3 h-3 mr-1 text-[#1D5E22]" /> Requiere aprobación
+                          <Sparkles className="w-3 h-3 mr-1 text-[#1D5E22]" /> {t('bookings.requires_review', 'Requiere aprobación')}
                         </span>
                       )}
                     </div>
@@ -287,12 +292,12 @@ export default function BookingsSection({
                     <button
                       id={`btn-rules-${am.id}`}
                       onClick={() => {
-                        alert(`REGLAS DE SEGURIDAD - ${am.name}:\n\n` + am.rules.map((r, i) => `${i+1}. ${r}`).join('\n'));
+                        alert(`${t('bookings.rules_alert_header', 'REGLAS DE SEGURIDAD')} - ${am.name}:\n\n` + am.rules.map((r, i) => `${i+1}. ${r}`).join('\n'));
                       }}
                       className="text-[10px] font-bold tracking-widest uppercase text-[#8C857B] hover:text-[#1A1A1A] flex items-center cursor-pointer"
                     >
                       <Info className="w-3.5 h-3.5 mr-1 text-[#8C857B]" />
-                      Reglas de uso
+                      {t('bookings.rules_btn', 'Reglas de uso')}
                     </button>
 
                     <button
@@ -300,7 +305,7 @@ export default function BookingsSection({
                       onClick={() => handleStartBooking(am)}
                       className="bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold tracking-widest uppercase px-4 py-2.5 rounded-none transition flex items-center cursor-pointer"
                     >
-                      Reservar
+                      {t('bookings.book_btn', 'Reservar')}
                       <ChevronRight className="w-3 h-3 ml-1" />
                     </button>
                   </div>
@@ -330,7 +335,7 @@ export default function BookingsSection({
               className="bg-white rounded-2xl w-full max-w-sm shadow-xl p-6 relative z-10 border border-slate-100 text-center space-y-5"
             >
               <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                <span className="font-bold text-slate-800 text-sm">Pase de Acceso Digital</span>
+                <span className="font-bold text-slate-800 text-sm">{t('bookings.qr_modal_title', 'Pase de Acceso Digital')}</span>
                 <button 
                   onClick={() => setShowQRBooking(null)}
                   className="p-1 text-slate-450 hover:text-slate-600 hover:bg-slate-50 rounded-lg"
@@ -368,14 +373,14 @@ export default function BookingsSection({
               </div>
 
               <div className="p-3 bg-indigo-50 text-indigo-800 rounded-xl border border-indigo-100/60 text-xs text-left leading-relaxed font-sans">
-                Aproxima esta pantalla en el escáner del pórtico de la amenidad. Asegura el aforo restringido de máximo {showQRBooking.guestCount} personas asociadas.
+                {t('bookings.qr_scan_message', 'Aproxima esta pantalla en el escáner del pórtico de la amenidad. Asegura el aforo restringido de máximo {count} personas asociadas.').replace('{count}', String(showQRBooking.guestCount))}
               </div>
 
               <button
                 onClick={() => setShowQRBooking(null)}
                 className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition"
               >
-                Cerrar Pase
+                {t('bookings.qr_close', 'Cerrar Pase')}
               </button>
             </motion.div>
           </div>
@@ -402,7 +407,7 @@ export default function BookingsSection({
             >
               <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-slate-800 text-base">Reservar Espacio Común</h3>
+                  <h3 className="font-semibold text-slate-800 text-base">{t('bookings.composer_title', 'Reservar Espacio Común')}</h3>
                   <p className="text-xs text-slate-400 mt-0.5">{selectedAmenity.name}</p>
                 </div>
                 <button 
@@ -416,7 +421,7 @@ export default function BookingsSection({
               <form onSubmit={handleCreateBooking} className="p-6 space-y-4">
                 {/* Date Picker Buttons */}
                 <div>
-                  <label className="text-slate-600 text-xs font-semibold block mb-2 font-medium">1. Selecciona el Día</label>
+                  <label className="text-slate-600 text-xs font-semibold block mb-2 font-medium">{t('bookings.composer_step1', '1. Selecciona el Día')}</label>
                   <div className="grid grid-cols-5 gap-2">
                     {dateOptions.map((opt) => (
                       <button
@@ -441,7 +446,7 @@ export default function BookingsSection({
 
                 {/* Slot Picker */}
                 <div>
-                  <label className="text-slate-600 text-xs font-semibold block mb-2 font-medium">2. Horario Disponible</label>
+                  <label className="text-slate-600 text-xs font-semibold block mb-2 font-medium">{t('bookings.composer_step2', '2. Horario Disponible')}</label>
                   <div className="grid grid-cols-2 gap-2">
                     {TIME_SLOTS.map((slot) => {
                       const taken = isSlotTaken(selectedAmenity.id, bookingDate, slot);
@@ -462,7 +467,7 @@ export default function BookingsSection({
                         >
                           <span className="block">{slot}</span>
                           <span className="text-[9px] opacity-80">
-                            {taken ? 'Ocupado' : 'Disponible'}
+                            {taken ? t('bookings.composer_slot_taken', 'Ocupado') : t('bookings.composer_slot_avail', 'Disponible')}
                           </span>
                         </button>
                       );
@@ -472,7 +477,7 @@ export default function BookingsSection({
 
                 {/* Guests counter */}
                 <div>
-                  <label className="text-slate-600 text-xs font-semibold block mb-1 font-medium">3. Número de Acompañantes</label>
+                  <label className="text-slate-600 text-xs font-semibold block mb-1 font-medium">{t('bookings.composer_step3', '3. Número de Acompañantes')}</label>
                   <div className="flex items-center space-x-3 mt-1.5">
                     <button
                       type="button"
@@ -492,7 +497,7 @@ export default function BookingsSection({
                       +
                     </button>
                     <span className="text-[11px] text-slate-400 font-sans">
-                      Aforo máximo permitido: {selectedAmenity.capacity} de personas.
+                      {t('bookings.composer_capacity_limit', 'Aforo máximo permitido: {capacity} de personas.').replace('{capacity}', String(selectedAmenity.capacity))}
                     </span>
                   </div>
                 </div>
@@ -500,20 +505,20 @@ export default function BookingsSection({
                 {/* Price Computation Summary */}
                 <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-xl space-y-2 text-xs font-sans">
                   <div className="flex justify-between text-slate-500">
-                    <span>Precio por Hora:</span>
-                    <span>{selectedAmenity.hourlyRate > 0 ? `${formatCurrency(selectedAmenity.hourlyRate)}` : 'Gratuito'}</span>
+                    <span>{t('bookings.composer_hourly_rate', 'Precio por Hora:')}</span>
+                    <span>{selectedAmenity.hourlyRate > 0 ? `${formatCurrency(selectedAmenity.hourlyRate)}` : t('bookings.cost_free', 'Gratuito')}</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
-                    <span>Duración estimada:</span>
-                    <span>{selectedSlot ? (selectedSlot.includes('14:00') || selectedSlot.includes('17:00') ? '3 horas' : '2 horas') : '--'}</span>
+                    <span>{t('bookings.composer_duration', 'Duración estimada:')}</span>
+                    <span>{selectedSlot ? (selectedSlot.includes('14:00') || selectedSlot.includes('17:00') ? t('bookings.composer_duration_hours', '{hours} horas').replace('{hours}', '3') : t('bookings.composer_duration_hour', '{hours} hora').replace('{hours}', '2')) : '--'}</span>
                   </div>
                   <div className="flex justify-between font-bold text-slate-800 pt-1.5 border-t border-slate-200/50 text-xs">
-                    <span>Costo total aproximado:</span>
+                    <span>{t('bookings.composer_total_cost', 'Costo total aproximado:')}</span>
                     <span className="text-indigo-600">
                       {selectedSlot 
                         ? (selectedAmenity.hourlyRate > 0 
                           ? formatCurrency(selectedAmenity.hourlyRate * (selectedSlot.includes('14:00') || selectedSlot.includes('17:00') ? 3 : 2)) 
-                          : 'Gratuito') 
+                          : t('bookings.cost_free', 'Gratuito')) 
                         : '--'}
                     </span>
                   </div>
@@ -523,7 +528,7 @@ export default function BookingsSection({
                   <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-start space-x-2 text-[10px] leading-relaxed">
                     <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                     <span>
-                      Esta amenidad de alta demanda (como el salón social) requiere la aprobación del administrador y un depósito reembolsable de limpieza. Te enviaremos un correo cuando sea confirmado.
+                      {t('bookings.composer_review_notice', 'Esta amenidad de alta demanda (como el salón social) requiere la aprobación del administrador y un depósito reembolsable de limpieza. Te enviaremos un correo cuando sea confirmado.')}
                     </span>
                   </div>
                 )}
@@ -532,16 +537,16 @@ export default function BookingsSection({
                   <button
                     type="button"
                     onClick={() => setSelectedAmenity(null)}
-                    className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700"
+                    className="px-4 py-2 text-xs font-semibold text-slate-550 hover:text-slate-700"
                   >
-                    Salir
+                    {t('lang.btn_cancel', 'Cancelar')}
                   </button>
                   <button
                     type="submit"
                     disabled={!selectedSlot}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Confirmar Reserva
+                    {t('bookings.composer_submit', 'Confirmar Reserva')}
                   </button>
                 </div>
               </form>

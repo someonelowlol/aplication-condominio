@@ -40,10 +40,12 @@ import BookingsSection from './BookingsSection';
 import IncidentsSection from './IncidentsSection';
 import DirectorySection from './DirectorySection';
 
+import { useLanguage } from './LanguageProvider';
 // Admin modules
 import AdminWorkspace from './admin/AdminWorkspace';
 
 export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
+  const { t } = useLanguage();
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'payments' | 'bookings' | 'incidents' | 'directory'>('dashboard');
   const [adminTab, setAdminTab] = useState<string>('dashboard');
 
@@ -909,26 +911,26 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                     <div className="space-y-4 max-w-xl text-left">
                       <div className="inline-flex items-center space-x-1.5 bg-[#F5F2ED] text-[#8C857B] px-3 py-1 text-[9px] font-bold tracking-widest uppercase border border-[#E5E1DA]/50">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Portal de Administración Activo</span>
+                        <span>{t('dashboard.welcome_admin_tag', 'Portal de Administración Activo')}</span>
                       </div>
                       <h1 className="text-4xl md:text-5xl font-serif italic leading-tight text-[#1A1A1A] font-normal">
-                        Hola, <br />Administrador.
+                        {t('dashboard.hello', 'Hola,')} <br />{t('login.new_admin', 'Administrador')}.
                       </h1>
                       <p className="text-xs md:text-sm text-[#8C857B] leading-relaxed max-w-md">
-                        Bienvenido a la plataforma de administración de <strong className="text-[#1A1A1A] font-medium">ResidenSmart</strong>. Aquí podrá publicar anuncios oficiales, coordinar reportes de fallas, auditar transferencias de cuotas y gestionar las reservas de amenidades.
+                        {t('dashboard.admin_desc', 'Bienvenido a la plataforma de administración de ResidenSmart. Aquí podrá publicar anuncios oficiales, coordinar reportes de fallas, auditar transferencias de cuotas y gestionar las reservas de amenidades.')}
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-4 max-w-xl text-left">
                       <div className="inline-flex items-center space-x-1.5 bg-[#F5F2ED] text-[#8C857B] px-3 py-1 text-[9px] font-bold tracking-widest uppercase border border-[#E5E1DA]/50">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Portal de Condóminos Activo</span>
+                        <span>{t('dashboard.welcome_resident_tag', 'Portal de Condóminos Activo')}</span>
                       </div>
                       <h1 className="text-4xl md:text-5xl font-serif italic leading-tight text-[#1A1A1A] font-normal">
-                        Hola, <br />{resident.name}.
+                        {t('dashboard.hello', 'Hola,')} <br />{resident.name}.
                       </h1>
                       <p className="text-xs md:text-sm text-[#8C857B] leading-relaxed max-w-md">
-                        Bienvenido a su portal digital de <strong className="text-[#1A1A1A] font-medium">ResidenSmart</strong>. Aquí podrá gestionar los servicios de su propiedad, agendar áreas comunes y consultar sus estados de cuenta de manera eficiente y transparente.
+                        {t('dashboard.resident_desc', 'Bienvenido a su portal digital de ResidenSmart. Aquí podrá gestionar los servicios de su propiedad, agendar áreas comunes y consultar sus estados de cuenta de manera eficiente y transparente.')}
                       </p>
                     </div>
                   )}
@@ -938,7 +940,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                     <div className="bg-[#F5F2ED] border border-[#E5E1DA] p-6 space-y-6 w-full md:max-w-xs rounded-none shrink-0 text-left">
                       <div className="space-y-4">
                         <div>
-                          <h2 className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#8C857B] mb-0.5">Recaudación (Junio)</h2>
+                          <h2 className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#8C857B] mb-0.5">{t('dashboard.recollection_june', 'Recaudación (Junio)')}</h2>
                           <div className="text-xl font-serif text-[#1A1A1A]">
                             {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
                               payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0)
@@ -948,7 +950,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                         
                         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E5E1DA]">
                           <div>
-                            <h3 className="text-[8px] font-bold tracking-wider uppercase text-[#8C857B] mb-0.5">Por Cobrar</h3>
+                            <h3 className="text-[8px] font-bold tracking-wider uppercase text-[#8C857B] mb-0.5">{t('dashboard.to_collect', 'Por Cobrar')}</h3>
                             <span className="text-xs font-bold text-rose-700">
                               {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
                                 payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0)
@@ -956,9 +958,9 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                             </span>
                           </div>
                           <div>
-                            <h3 className="text-[8px] font-bold tracking-wider uppercase text-[#8C857B] mb-0.5">Por Aprobar</h3>
+                            <h3 className="text-[8px] font-bold tracking-wider uppercase text-[#8C857B] mb-0.5">{t('dashboard.to_approve', 'Por Aprobar')}</h3>
                             <span className="text-xs font-bold text-amber-700">
-                              {payments.filter(p => p.status === 'under_review').length} pagos
+                              {payments.filter(p => p.status === 'under_review').length} {t('dashboard.payments', 'pagos')}
                             </span>
                           </div>
                         </div>
@@ -969,7 +971,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                           onClick={() => setCurrentTab('payments')}
                           className="w-full bg-[#1A1A1A] text-white py-3 text-[10px] font-bold tracking-widest uppercase hover:bg-black transition-colors rounded-none cursor-pointer text-center"
                         >
-                          Revisar Comprobantes
+                          {t('dashboard.review_proofs', 'Revisar Comprobantes')}
                         </button>
                       </div>
                     </div>
@@ -977,13 +979,13 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                     <div className="bg-[#F5F2ED] border border-[#E5E1DA] p-6 space-y-6 w-full md:max-w-xs rounded-none shrink-0 text-left">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h2 className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#8C857B] mb-1">Estado de Cuenta</h2>
+                          <h2 className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#8C857B] mb-1">{t('dashboard.account_balance', 'Estado de Cuenta')}</h2>
                           <div className="text-2xl md:text-3xl font-serif text-[#1A1A1A]">
                             {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(resident.balance)}
                           </div>
                         </div>
                         <span className="bg-white px-2 py-1 text-[9px] font-bold tracking-widest border border-[#E5E1DA] uppercase text-[#1A1A1A]">
-                          {pendingPaymentsCount > 0 ? 'Pendiente' : 'Al día'}
+                          {pendingPaymentsCount > 0 ? t('dashboard.balance_pending', 'Pendiente') : t('dashboard.balance_ok', 'Al día')}
                         </span>
                       </div>
 
@@ -993,10 +995,10 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                           onClick={() => setCurrentTab('payments')}
                           className="w-full bg-[#1A1A1A] text-white py-3 text-[10px] font-bold tracking-widest uppercase hover:bg-black transition-colors rounded-none cursor-pointer"
                         >
-                          Pagar Mantenimiento
+                          {t('dashboard.pay_maintenance', 'Pagar Mantenimiento')}
                         </button>
                         <p className="text-[10px] text-[#8C857B] italic text-center">
-                          Próximo vencimiento ordinario: Día 10
+                          {t('dashboard.cutoff_notice', 'Próximo vencimiento ordinario: Día 10')}
                         </p>
                       </div>
                     </div>
@@ -1006,14 +1008,14 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                 {/* ACCIONES DE ACCESO RÁPIDO */}
                 <div className="mt-8 pt-8 border-t border-[#E5E1DA] flex flex-col space-y-3">
                   <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#8C857B] text-left">
-                    {isAdmin ? 'Acciones Administrativas' : 'Servicios Rápidos'}
+                    {isAdmin ? t('dashboard.admin_actions', 'Acciones Administrativas') : t('dashboard.quick_services', 'Servicios Rápidos')}
                   </h2>
                   {isAdmin ? (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <button
                         onClick={() => {
-                          const title = prompt('Ingresa el título del comunicado:');
-                          const content = prompt('Ingresa el contenido del comunicado:');
+                          const title = prompt(t('dashboard.prompt_ann_title', 'Ingresa el título del comunicado:'));
+                          const content = prompt(t('dashboard.prompt_ann_content', 'Ingresa el contenido del comunicado:'));
                           if (title && content) {
                             const newAnn = {
                               id: `ann-${Date.now()}`,
@@ -1024,26 +1026,26 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                               author: 'Administrador General'
                             };
                             setAnnouncements(prev => [newAnn, ...prev]);
-                            alert('Comunicado publicado con éxito.');
+                            alert(t('dashboard.ann_success_alert', 'Comunicado publicado con éxito.'));
                           }
                         }}
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <Megaphone className="w-4 h-4 text-[#8C857B]" />
-                        <span>Crear Comunicado</span>
+                        <span>{t('dashboard.create_announcement', 'Crear Comunicado')}</span>
                       </button>
 
                       <button
                         onClick={() => {
-                          const amountStr = prompt('Monto del cargo en MXN (ej: 1850):');
-                          const title = prompt('Concepto del cargo (ej: Cuota mantenimiento Julio):');
+                          const amountStr = prompt(t('payments.admin_charge_amount_prompt', 'Monto del cargo en MXN (ej: 1850):'));
+                          const title = prompt(t('payments.admin_charge_concept_prompt', 'Concepto del cargo (ej: Cuota mantenimiento Julio):'));
                           if (amountStr && title) {
                             const amount = parseFloat(amountStr);
                             if (!isNaN(amount)) {
                               const newPay: Payment = {
                                 id: `pay-custom-${Date.now()}`,
                                 title,
-                                description: `Cargo administrativo generado de manera extraordinaria.`,
+                                description: t('payments.admin_charge_desc', 'Cargo administrativo generado de manera extraordinaria.'),
                                 amount,
                                 dueDate: new Date(Date.now() + 10*24*60*60*1000).toISOString().substring(0, 10),
                                 status: 'pending',
@@ -1051,14 +1053,14 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                 reference: `REF-ADM-${Date.now().toString().substring(8, 12)}`
                               };
                               handleAddCustomPayment(newPay);
-                              alert('Cargo administrativo agregado con éxito.');
+                              alert(t('payments.admin_charge_added', 'Cargo administrativo agregado con éxito.'));
                             }
                           }
                         }}
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <Plus className="w-4 h-4 text-[#8C857B]" />
-                        <span>Generar Cargo</span>
+                        <span>{t('dashboard.generate_charge', 'Generar Cargo')}</span>
                       </button>
 
                       <button
@@ -1066,7 +1068,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <AlertTriangle className="w-4 h-4 text-[#8C857B]" />
-                        <span>Fallas Reportadas ({incidents.filter(i => i.status !== 'resolved').length})</span>
+                        <span>{t('dashboard.reported_defects', 'Fallas Reportadas')} ({incidents.filter(i => i.status !== 'resolved').length})</span>
                       </button>
 
                       <button
@@ -1074,7 +1076,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <Calendar className="w-4 h-4 text-[#8C857B]" />
-                        <span>Ver Reservas ({bookings.length})</span>
+                        <span>{t('dashboard.view_bookings', 'Ver Reservas')} ({bookings.length})</span>
                       </button>
                     </div>
                   ) : (
@@ -1084,7 +1086,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <Calendar className="w-4 h-4 text-[#8C857B]" />
-                        <span>Reservar Áreas</span>
+                        <span>{t('dashboard.book_areas', 'Reservar Áreas')}</span>
                       </button>
 
                       <button
@@ -1092,32 +1094,28 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <AlertTriangle className="w-4 h-4 text-[#8C857B]" />
-                        <span>Reportar Falla</span>
+                        <span>{t('dashboard.report_defect', 'Reportar Falla')}</span>
                       </button>
 
                       <button
                         onClick={() => {
                           setCurrentTab('incidents');
-                          alert('Hemos preparado los campos para reportar una falla eléctrica en el elevador.');
+                          alert(t('dashboard.elevator_light_setup', 'Hemos preparado los campos para reportar una falla eléctrica en el elevador.'));
                         }}
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <Clock className="w-4 h-4 text-[#8C857B]" />
-                        <span>Luz en Elevador</span>
+                        <span>{t('dashboard.elevator_light', 'Luz en Elevador')}</span>
                       </button>
 
                       <button
                         onClick={() => {
-                          alert('TELÉFONOS DE EMERGENCIA DE RESIDENSMART:\n\n' + 
-                            '• Caseta de Vigilancia Principal: +52 55 9002 1100\n' + 
-                            '• Conserjería Nocturna: +52 55 9002 1122\n' + 
-                            '• Protección Civil Zona S.: 911 / 55 5658 1111\n\n' + 
-                            'Haga clic para copiar.');
+                          alert(t('dashboard.emergency_alert', 'TELÉFONOS DE EMERGENCIA DE RESIDENSMART:\n\n• Caseta de Vigilancia Principal: +52 55 9002 1100\n• Conserjería Nocturna: +52 55 9002 1122\n• Protección Civil Zona S.: 911 / 55 5658 1111\n\nHaga clic para copiar.'));
                         }}
                         className="border border-[#E5E1DA] p-4 hover:bg-[#F5F2ED] transition text-center flex flex-col items-center justify-center gap-2 bg-white rounded-none cursor-pointer text-[#1A1A1A] text-[10px] font-bold tracking-widest uppercase"
                       >
                         <PhoneCall className="w-4 h-4 text-[#8C857B]" />
-                        <span>Copiar Vigilancia</span>
+                        <span>{t('dashboard.copy_security', 'Copiar Vigilancia')}</span>
                       </button>
                     </div>
                   )}
@@ -1130,14 +1128,14 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                 {/* COLUMN 1 & 2: TABLON DE ANUNCIOS */}
                 <div className="lg:col-span-2 space-y-6">
                   <div className="flex justify-between items-end border-b border-[#E5E1DA] pb-2 mb-4">
-                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">Avisos de la Administración</h2>
-                    <span className="text-[10px] text-[#8C857B] uppercase tracking-wider">{announcements.length} comunicados</span>
+                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">{t('dashboard.admin_announcements_title', 'Avisos de la Administración')}</h2>
+                    <span className="text-[10px] text-[#8C857B] uppercase tracking-wider">{announcements.length} {t('dashboard.announcements_count', 'comunicados')}</span>
                   </div>
 
                   <div className="space-y-4">
                     {announcements.length === 0 ? (
                       <div className="border border-dashed border-[#E5E1DA] py-12 text-center text-[#8C857B] text-xs bg-white">
-                        No hay anuncios oficiales publicados por el momento en esta copropiedad.
+                        {t('dashboard.no_announcements', 'No hay anuncios oficiales publicados por el momento en esta copropiedad.')}
                       </div>
                     ) : (
                       announcements.map((ann) => {
@@ -1151,20 +1149,20 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                               <div className="flex flex-wrap items-center gap-3">
                                 <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B]">{ann.date}</span>
                                 {ann.category === 'urgente' && (
-                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-rose-300 bg-rose-50 text-[#1A1A1A]">Urgente</span>
+                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-rose-300 bg-rose-50 text-[#1A1A1A]">{t('dashboard.ann_category_urgent', 'Urgente')}</span>
                                 )}
                                 {ann.category === 'maintenance' && (
-                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-[#CEC7BC] bg-[#F5F2ED] text-[#1A1A1A]">Mantenimiento</span>
+                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-[#CEC7BC] bg-[#F5F2ED] text-[#1A1A1A]">{t('dashboard.ann_category_maintenance', 'Mantenimiento')}</span>
                                 )}
                                 {ann.category === 'event' && (
-                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-emerald-300 bg-emerald-50 text-[#1A1A1A]">Evento Social</span>
+                                  <span className="px-2 py-0.5 text-[8px] font-bold tracking-widest uppercase border border-emerald-300 bg-emerald-50 text-[#1A1A1A]">{t('dashboard.ann_category_event', 'Evento Social')}</span>
                                 )}
                               </div>
                               <h3 className="font-serif italic text-lg leading-snug text-[#1A1A1A] hover:underline font-normal">{ann.title}</h3>
                               <p className="text-xs text-[#8C857B] leading-relaxed line-clamp-2 mt-1">{ann.content}</p>
                             </div>
                             
-                            <span className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A] hover:underline self-end md:self-start">Leer más →</span>
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A] hover:underline self-end md:self-start">{t('dashboard.read_more', 'Leer más →')}</span>
                           </div>
                         );
                       })
@@ -1176,7 +1174,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                 <div className="space-y-8 border-l border-[#E5E1DA] pl-0 lg:pl-8">
                   {/* DIRECTIVA */}
                   <div className="bg-[#F5F2ED] border border-[#E5E1DA] p-6 rounded-none space-y-4">
-                    <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#8C857B] border-b border-[#E5E1DA] pb-2">Administración y Soporte</h3>
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#8C857B] border-b border-[#E5E1DA] pb-2">{t('dashboard.admin_support_title', 'Administración y Soporte')}</h3>
                     
                     <div className="divide-y divide-[#E5E1DA]">
                       {/* Admin contact */}
@@ -1187,16 +1185,16 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                           </div>
                           <div>
                             <span className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] block">Ing. Manuel Esparza</span>
-                            <span className="text-[10px] text-[#8C857B] block">Administrador Residente</span>
+                            <span className="text-[10px] text-[#8C857B] block">{t('dashboard.admin_res_role', 'Administrador Residente')}</span>
                           </div>
                         </div>
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText('+52 55 4501 2299');
-                            alert('Teléfono de Administrador copiado.');
+                            alert(t('dashboard.admin_phone_copied', 'Teléfono de Administrador copiado.'));
                           }}
                           className="text-[#1A1A1A] hover:bg-white p-2 border border-[#E5E1DA] bg-[#FDFCFB] transition"
-                          title="Copiar teléfono"
+                          title={t('dashboard.copy_phone_tooltip', 'Copiar teléfono')}
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -1209,17 +1207,17 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                             C1
                           </div>
                           <div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] block">Seguridad Principal</span>
-                            <span className="text-[10px] text-[#8C857B] block">Seguridad Caseta 24 hrs</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] block">{t('dashboard.security_main_title', 'Seguridad Principal')}</span>
+                            <span className="text-[10px] text-[#8C857B] block">{t('dashboard.security_24h_desc', 'Seguridad Caseta 24 hrs')}</span>
                           </div>
                         </div>
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText('+52 55 9002 1100');
-                            alert('Teléfono de Caseta copiado.');
+                            alert(t('dashboard.security_phone_copied', 'Teléfono de Caseta copiado.'));
                           }}
                           className="text-[#1A1A1A] hover:bg-white p-2 border border-[#E5E1DA] bg-[#FDFCFB] transition"
-                          title="Copiar teléfono"
+                          title={t('dashboard.copy_phone_tooltip', 'Copiar teléfono')}
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -1232,17 +1230,17 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                             ST
                           </div>
                           <div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] block">Soporte Técnico</span>
-                            <span className="text-[10px] text-[#8C857B] block">Guardia de Mantenimiento</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] block">{t('dashboard.tech_support_title', 'Soporte Técnico')}</span>
+                            <span className="text-[10px] text-[#8C857B] block">{t('dashboard.tech_guard_desc', 'Guardia de Mantenimiento')}</span>
                           </div>
                         </div>
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText('+52 55 9002 1122');
-                            alert('Teléfono de Guardia copiado.');
+                            alert(t('dashboard.tech_phone_copied', 'Teléfono de Guardia copiado.'));
                           }}
                           className="text-[#1A1A1A] hover:bg-white p-2 border border-[#E5E1DA] bg-[#FDFCFB] transition"
-                          title="Copiar teléfono"
+                          title={t('dashboard.copy_phone_tooltip', 'Copiar teléfono')}
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -1253,22 +1251,17 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                   {/* COMODIDAD RESIDENTE BOX */}
                   <div className="bg-white border border-[#E5E1DA] p-6 flex flex-col justify-between space-y-4 text-left">
                     <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#1A1A1A]">Reglamento Interno</h4>
+                      <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#1A1A1A]">{t('dashboard.rules_title', 'Reglamento Interno')}</h4>
                       <p className="text-xs text-[#8C857B] leading-relaxed">
-                        Recuerda que el volumen de la música exterior debe ser moderado a partir de las 22:00 horas. Mantengamos una vecindad pacífica y asertiva.
+                        {t('dashboard.rules_short_desc', 'Recuerda que el volumen de la música exterior debe ser moderado a partir de las 22:00 horas. Mantengamos una vecindad pacífica y asertiva.')}
                       </p>
                     </div>
                     <button
-                      onClick={() => alert(`REGLAMENTO FUNDACIONAL RESIDENSMART:\n\n` + 
-                        '1. Mascotas deben portar correa en áreas verdes comunes.\n' + 
-                        '2. Cada departamento dispone de 2 cajones numerados asignados.\n' + 
-                        '3. Es obligatorio notificar mudanzas con 48 horas de anticipación.\n' + 
-                        '4. Cuota ordinaria de mantenimiento expira el día 10 de cada mes.'
-                      )}
+                      onClick={() => alert(t('dashboard.rules_modal_message', 'REGLAMENTO FUNDACIONAL RESIDENSMART:\n\n1. Mascotas deben portar correa en áreas verdes comunes.\n2. Cada departamento dispone de 2 cajones numerados asignados.\n3. Es obligatorio notificar mudanzas con 48 horas de anticipación.\n4. Cuota ordinaria de mantenimiento expira el día 10 de cada mes.'))}
                       className="text-[10px] uppercase font-bold tracking-widest text-[#1A1A1A] hover:underline inline-flex items-center text-left"
                     >
                       <Info className="w-3.5 h-3.5 mr-1.5 text-[#8C857B]" />
-                      Ver todos los estatutos
+                      {t('dashboard.rules_view_all', 'Ver todos los estatutos')}
                     </button>
                   </div>
                 </div>
@@ -1288,13 +1281,13 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
               {isAdmin ? (
                 <div className="space-y-8 pb-12 text-left">
                   <div className="border-b border-[#E5E1DA] pb-2">
-                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">Aprobación de Transferencias y Pagos</h2>
-                    <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">Auditoría y control de comprobantes de pago subidos por los residentes.</p>
+                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">{t('dashboard.admin_payments_title', 'Aprobación de Transferencias y Pagos')}</h2>
+                    <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">{t('dashboard.admin_payments_subtitle', 'Auditoría y control de comprobantes de pago subidos por los residentes.')}</p>
                   </div>
 
                   {/* Pagos por Aprobar */}
                   <div className="space-y-4">
-                    <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">Pagos Bajo Revisión ({payments.filter(p => p.status === 'under_review').length})</h3>
+                    <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">{t('dashboard.payments_under_review', 'Pagos Bajo Revisión')} ({payments.filter(p => p.status === 'under_review').length})</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {payments.filter(p => p.status === 'under_review').map((pay) => (
                         <div key={pay.id} className="bg-white border border-[#E5E1DA] p-6 rounded-none space-y-4">
@@ -1302,13 +1295,13 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                             <div>
                               <span className="text-[9px] font-mono tracking-widest uppercase text-[#8C857B]">{pay.reference}</span>
                               <h4 className="font-serif italic text-lg leading-snug text-[#1A1A1A]">{pay.title}</h4>
-                              <p className="text-xs text-[#8C857B] mt-1">Cargado por Residente (Luis Martínez)</p>
+                              <p className="text-xs text-[#8C857B] mt-1">{t('dashboard.uploaded_by_resident', 'Cargado por Residente (Luis Martínez)')}</p>
                             </div>
                             <span className="text-lg font-mono font-bold text-[#1A1A1A]">${pay.amount.toFixed(2)}</span>
                           </div>
 
                           <div className="p-3 bg-[#F5F2ED] border border-[#E5E1DA] text-[10px] text-[#8C857B] font-mono">
-                            Comprobante adjunto: {pay.proofFile || 'comprobante_bancario_transferencia.pdf'}
+                            {t('dashboard.proof_attached', 'Comprobante adjunto')}: {pay.proofFile || 'comprobante_bancario_transferencia.pdf'}
                           </div>
 
                           <div className="flex gap-2">
@@ -1316,20 +1309,20 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                               onClick={() => handleApprovePayment(pay.id)}
                               className="flex-1 bg-[#1A1A1A] text-white py-2 text-[10px] font-bold tracking-widest uppercase hover:bg-black transition-colors rounded-none cursor-pointer text-center"
                             >
-                              Aprobar Pago
+                              {t('dashboard.approve_payment_btn', 'Aprobar Pago')}
                             </button>
                             <button
                               onClick={() => handleRejectPayment(pay.id)}
                               className="flex-1 bg-white text-[#1A1A1A] border border-[#E5E1DA] py-2 text-[10px] font-bold tracking-widest uppercase hover:bg-[#F5F2ED] transition-colors rounded-none cursor-pointer text-center"
                             >
-                              Rechazar
+                              {t('dashboard.reject_btn', 'Rechazar')}
                             </button>
                           </div>
                         </div>
                       ))}
                       {payments.filter(p => p.status === 'under_review').length === 0 && (
                         <div className="col-span-full border border-dashed border-[#E5E1DA] py-8 text-center text-[#8C857B] text-xs bg-white">
-                          No hay comprobantes pendientes de aprobación en este momento.
+                          {t('dashboard.no_pending_proofs', 'No hay comprobantes pendientes de aprobación en este momento.')}
                         </div>
                       )}
                     </div>
@@ -1338,18 +1331,18 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                   {/* Todos los Pagos del Condominio */}
                   <div className="space-y-4 pt-6 border-t border-[#E5E1DA]">
                     <div className="flex justify-between items-end">
-                      <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">Todos los Cargos Generados</h3>
+                      <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">{t('dashboard.all_charges_title', 'Todos los Cargos Generados')}</h3>
                       <button
                         onClick={() => {
-                          const amountStr = prompt('Monto del cargo en MXN (ej: 1850):');
-                          const title = prompt('Concepto del cargo (ej: Cuota mantenimiento Julio):');
+                          const amountStr = prompt(t('payments.admin_charge_amount_prompt', 'Monto del cargo en MXN (ej: 1850):'));
+                          const title = prompt(t('payments.admin_charge_concept_prompt', 'Concepto del cargo (ej: Cuota mantenimiento Julio):'));
                           if (amountStr && title) {
                             const amount = parseFloat(amountStr);
                             if (!isNaN(amount)) {
                               const newPay: Payment = {
                                 id: `pay-custom-${Date.now()}`,
                                 title,
-                                description: `Cargo administrativo generado de manera extraordinaria.`,
+                                description: t('payments.admin_charge_desc', 'Cargo administrativo generado de manera extraordinaria.'),
                                 amount,
                                 dueDate: new Date(Date.now() + 10*24*60*60*1000).toISOString().substring(0, 10),
                                 status: 'pending',
@@ -1357,13 +1350,13 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                 reference: `REF-ADM-${Date.now().toString().substring(8, 12)}`
                               };
                               handleAddCustomPayment(newPay);
-                              alert('Cargo agregado.');
+                              alert(t('payments.admin_charge_added', 'Cargo administrativo agregado con éxito.'));
                             }
                           }
                         }}
                         className="bg-white border border-[#E5E1DA] text-[#1A1A1A] hover:bg-[#F5F2ED] px-4 py-2 text-[9px] font-bold tracking-widest uppercase rounded-none transition"
                       >
-                        Generar Nuevo Cargo
+                        {t('dashboard.generate_new_charge_btn', 'Generar Nuevo Cargo')}
                       </button>
                     </div>
 
@@ -1371,12 +1364,12 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                       <table className="w-full text-left border-collapse font-sans text-xs">
                         <thead>
                           <tr className="bg-[#F5F2ED] border-b border-[#E5E1DA] text-[9px] uppercase tracking-wider font-bold text-[#8C857B]">
-                            <th className="p-3">Referencia</th>
-                            <th className="p-3">Concepto</th>
-                            <th className="p-3">Monto</th>
-                            <th className="p-3">Vencimiento</th>
-                            <th className="p-3">Estado</th>
-                            <th className="p-3">Residente</th>
+                            <th className="p-3">{t('payments.history_reference', 'Referencia')}</th>
+                            <th className="p-3">{t('payments.history_concept', 'Concepto')}</th>
+                            <th className="p-3">{t('payments.history_amount', 'Monto')}</th>
+                            <th className="p-3">{t('payments.vence_el', 'Vence el:')}</th>
+                            <th className="p-3">{t('payments.history_status', 'Estado')}</th>
+                            <th className="p-3">{t('dashboard.table_resident', 'Residente')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#E5E1DA]">
@@ -1394,10 +1387,10 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                     ? 'border-amber-200 bg-amber-50 text-amber-800'
                                     : 'border-rose-200 bg-rose-50 text-rose-800'
                                 }`}>
-                                  {p.status === 'paid' ? 'Pagado' : p.status === 'under_review' ? 'Revisión' : 'Pendiente'}
+                                  {p.status === 'paid' ? t('payments.status_paid', 'Pagado') : p.status === 'under_review' ? t('payments.status_review', 'En Revisión') : t('dashboard.balance_pending', 'Pendiente')}
                                 </span>
                               </td>
-                              <td className="p-3 text-[#8C857B]">Luis Martínez (Apto 402)</td>
+                              <td className="p-3 text-[#8C857B]">{t('dashboard.table_resident_name', 'Luis Martínez (Apto 402)')}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1427,12 +1420,12 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
               {isAdmin ? (
                 <div className="space-y-8 pb-12 text-left">
                   <div className="border-b border-[#E5E1DA] pb-2">
-                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">Administración de Áreas Comunes y Reservas</h2>
-                    <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">Control y aprobación de reservaciones calendarizadas por los residentes.</p>
+                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">{t('dashboard.admin_bookings_title', 'Administración de Áreas Comunes y Reservas')}</h2>
+                    <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">{t('dashboard.admin_bookings_subtitle', 'Control y aprobación de reservaciones calendarizadas por los residentes.')}</p>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">Reservas Registradas ({bookings.length})</h3>
+                    <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">{t('dashboard.registered_bookings', 'Reservas Registradas')} ({bookings.length})</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {bookings.map((book) => (
                         <div key={book.id} className="bg-white border border-[#E5E1DA] p-6 rounded-none flex flex-col justify-between space-y-4">
@@ -1446,19 +1439,19 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                   ? 'border-amber-200 bg-amber-50 text-amber-800'
                                   : 'border-rose-200 bg-rose-50 text-rose-800'
                               }`}>
-                                {book.status === 'confirmed' ? 'Confirmado' : book.status === 'pending' ? 'Pendiente' : 'Cancelado'}
+                                {book.status === 'confirmed' ? t('bookings.status_confirmed', 'Confirmada') : book.status === 'pending' ? t('bookings.status_pending', 'Sujeto a Aprobación') : t('bookings.status_cancelled', 'Cancelada')}
                               </span>
                             </div>
                             
                             <h4 className="font-serif italic text-lg leading-snug text-[#1A1A1A]">{book.amenityName}</h4>
                             <p className="text-xs text-[#8C857B]">
-                              Horario: <strong className="text-[#1A1A1A] font-medium">{book.timeSlot}</strong>
+                              {t('dashboard.schedule_label', 'Horario')}: <strong className="text-[#1A1A1A] font-medium">{book.timeSlot}</strong>
                             </p>
                             <p className="text-xs text-[#8C857B]">
-                              Residente: <strong className="text-[#1A1A1A] font-medium">Luis Martínez (Apto 402)</strong>
+                              {t('dashboard.table_resident', 'Residente')}: <strong className="text-[#1A1A1A] font-medium">{t('dashboard.table_resident_name', 'Luis Martínez (Apto 402)')}</strong>
                             </p>
                             <p className="text-xs text-[#8C857B]">
-                              Invitados: <strong className="text-[#1A1A1A] font-medium">{book.guestCount} personas</strong>
+                              {t('dashboard.guests_label', 'Invitados')}: <strong className="text-[#1A1A1A] font-medium">{book.guestCount} {t('bookings.people', 'pers.')}</strong>
                             </p>
                           </div>
 
@@ -1470,7 +1463,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                   onClick={() => handleApproveBooking(book.id)}
                                   className="bg-[#1A1A1A] text-white px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase hover:bg-black rounded-none transition"
                                 >
-                                  Aprobar
+                                  {t('dashboard.approve_btn', 'Aprobar')}
                                 </button>
                               )}
                               {book.status !== 'cancelled' && (
@@ -1478,7 +1471,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                   onClick={() => handleCancelBooking(book.id)}
                                   className="bg-white text-rose-700 border border-rose-200 hover:bg-rose-50 px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase rounded-none transition"
                                 >
-                                  Cancelar
+                                  {t('dashboard.cancel_btn', 'Cancelar')}
                                 </button>
                               )}
                             </div>
@@ -1510,14 +1503,14 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
               {isAdmin ? (
                 <div className="space-y-8 pb-12 text-left">
                   <div className="border-b border-[#E5E1DA] pb-2">
-                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">Gestión de Reportes y Fallas</h2>
-                    <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">Administre, asigne y responda a las incidencias levantadas por los condóminos.</p>
+                    <h2 className="text-xs font-bold tracking-widest uppercase text-[#1A1A1A]">{t('dashboard.admin_incidents_title', 'Gestión de Reportes y Fallas')}</h2>
+                    <p className="text-[11px] text-[#8C857B] mt-0.5 italic font-serif">{t('dashboard.admin_incidents_subtitle', 'Administre, asigne y responda a las incidencias levantadas por los condóminos.')}</p>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Incidents List */}
                     <div className="lg:col-span-1 space-y-4">
-                      <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">Reportes Activos ({incidents.filter(i => i.status !== 'resolved').length})</h3>
+                      <h3 className="text-[10px] font-bold tracking-wider uppercase text-[#1A1A1A]">{t('dashboard.active_reports', 'Reportes Activos')} ({incidents.filter(i => i.status !== 'resolved').length})</h3>
                       <div className="space-y-3">
                         {incidents.map((inc) => {
                           const isSelected = selectedAdminIncidentId === inc.id;
@@ -1536,7 +1529,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                 <span className={`px-1.5 py-0.5 text-[7px] font-bold uppercase border ${
                                   inc.priority === 'high' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-[#CEC7BC] bg-[#F5F2ED] text-[#1A1A1A]'
                                 }`}>
-                                  {inc.priority === 'high' ? 'Alta' : 'Media'}
+                                  {inc.priority === 'high' ? t('incidents.priority_high', 'Alta Prioridad') : t('incidents.priority_medium', 'Media')}
                                 </span>
                               </div>
                               <h4 className="font-serif italic text-sm text-[#1A1A1A] leading-tight mb-1">{inc.title}</h4>
@@ -1545,7 +1538,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                 <span className={
                                   inc.status === 'resolved' ? 'text-emerald-700' : inc.status === 'in_progress' ? 'text-indigo-700' : 'text-amber-700'
                                 }>
-                                  {inc.status === 'resolved' ? 'Resuelto' : inc.status === 'in_progress' ? 'En Proceso' : inc.status === 'assigned' ? 'Asignado' : 'Reportado'}
+                                  {inc.status === 'resolved' ? t('incidents.status_resolved', 'Solucionado ✓') : inc.status === 'in_progress' ? t('incidents.status_in_progress', 'Trabajo Iniciado') : inc.status === 'assigned' ? t('incidents.status_assigned', 'Técnico Asignado') : t('incidents.status_reported', 'Reportado')}
                                 </span>
                               </div>
                             </div>
@@ -1558,36 +1551,36 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                     <div className="lg:col-span-2 space-y-6">
                       {selectedAdminIncidentId ? (() => {
                         const inc = incidents.find(i => i.id === selectedAdminIncidentId);
-                        if (!inc) return <div className="border border-[#E5E1DA] bg-white p-8 text-center text-[#8C857B]">Selecciona un reporte de la lista para ver el seguimiento.</div>;
+                        if (!inc) return <div className="border border-[#E5E1DA] bg-white p-8 text-center text-[#8C857B]">{t('dashboard.select_report_prompt', 'Selecciona un reporte de la lista para ver el seguimiento.')}</div>;
                         
                         return (
                           <div className="bg-white border border-[#E5E1DA] p-6 space-y-6">
                             <div className="border-b border-[#E5E1DA] pb-4 space-y-2">
                               <div className="flex flex-wrap justify-between items-center gap-2">
-                                <span className="text-[10px] font-mono text-[#8C857B]">Reporte ID: {inc.id} • Creado el {inc.createdAt}</span>
+                                <span className="text-[10px] font-mono text-[#8C857B]">{t('dashboard.report_id_label', 'Reporte ID')}: {inc.id} • {t('incidents.entered_label', 'Ingresado')}: {inc.createdAt}</span>
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => handleChangeIncidentStatus(inc.id, 'in_progress')}
                                     className="bg-[#F5F2ED] border border-[#E5E1DA] hover:bg-white text-[9px] font-bold tracking-widest uppercase px-3 py-1 text-[#1A1A1A] transition"
                                   >
-                                    En Proceso
+                                    {t('dashboard.in_process_btn', 'En Proceso')}
                                   </button>
                                   <button
                                     onClick={() => handleChangeIncidentStatus(inc.id, 'resolved')}
                                     className="bg-[#1A1A1A] text-white hover:bg-black text-[9px] font-bold tracking-widest uppercase px-3 py-1 transition"
                                   >
-                                    Resolver
+                                    {t('dashboard.resolve_btn', 'Resolver')}
                                   </button>
                                 </div>
                               </div>
                               <h3 className="font-serif italic text-2xl text-[#1A1A1A] leading-tight font-normal">{inc.title}</h3>
                               <p className="text-xs text-[#8C857B]">
-                                Ubicación: <strong className="text-[#1A1A1A] font-medium">{inc.location}</strong>
+                                {t('incidents.modal_location_label', 'Ubicación Precisa')}: <strong className="text-[#1A1A1A] font-medium">{inc.location}</strong>
                               </p>
                             </div>
 
                             <div className="space-y-2">
-                              <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A]">Descripción del Residente</h4>
+                              <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A]">{t('dashboard.resident_desc_title', 'Descripción del Residente')}</h4>
                               <p className="text-xs text-[#5A554F] bg-[#F5F2ED]/50 p-4 border border-[#E5E1DA] leading-relaxed">
                                 {inc.description}
                               </p>
@@ -1595,17 +1588,17 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
 
                             {/* Asignación de Técnico */}
                             <div className="p-4 bg-[#F5F2ED] border border-[#E5E1DA] space-y-3">
-                              <h4 className="text-[9px] font-bold tracking-widest uppercase text-[#1A1A1A]">Asignación de Personal Técnico</h4>
+                              <h4 className="text-[9px] font-bold tracking-widest uppercase text-[#1A1A1A]">{t('dashboard.tech_assignment_title', 'Asignación de Personal Técnico')}</h4>
                               <div className="flex flex-wrap items-center gap-4">
                                 <div className="text-xs text-[#8C857B]">
-                                  Técnico Asignado: <strong className="text-[#1A1A1A] font-bold">{inc.technicianName || 'Ninguno'}</strong>
+                                  {t('dashboard.tech_assigned_label', 'Técnico Asignado')}: <strong className="text-[#1A1A1A] font-bold">{inc.technicianName || 'Ninguno'}</strong>
                                 </div>
                                 <select
                                   onChange={(e) => handleAssignTechnician(inc.id, e.target.value)}
                                   className="bg-white border border-[#E5E1DA] text-xs px-2.5 py-1.5 rounded-none outline-none focus:border-[#1A1A1A] text-[#1A1A1A]"
                                   defaultValue={inc.technicianName || ''}
                                 >
-                                  <option value="">-- Asignar Técnico --</option>
+                                  <option value="">{t('dashboard.assign_tech_placeholder', '-- Asignar Técnico --')}</option>
                                   <option value="Ing. Carlos Gutiérrez (Plomería)">Ing. Carlos Gutiérrez (Plomería)</option>
                                   <option value="Sofía Alatorre (Electricidad)">Sofía Alatorre (Electricidad)</option>
                                   <option value="Ing. Pedro Ruiz (Otis Elevadores)">Ing. Pedro Ruiz (Otis Elevadores)</option>
@@ -1616,7 +1609,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
 
                             {/* Chat Thread */}
                             <div className="space-y-4">
-                              <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A]">Mensajes de Seguimiento</h4>
+                              <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#1A1A1A]">{t('dashboard.follow_up_messages', 'Mensajes de Seguimiento')}</h4>
                               <div className="border border-[#E5E1DA] p-4 bg-[#FDFCFB] space-y-4 max-h-60 overflow-y-auto">
                                 {inc.comments.map((comm) => {
                                   const isSelf = comm.authorRole === 'admin';
@@ -1629,7 +1622,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                       }`}>
                                         <div className="flex justify-between items-baseline gap-4 mb-1">
                                           <span className="text-[8px] font-bold uppercase tracking-wider opacity-75">
-                                            {comm.authorName} ({comm.authorRole === 'resident' ? 'Residente' : comm.authorRole === 'technician' ? 'Técnico' : 'Admin'})
+                                            {comm.authorName} ({comm.authorRole === 'resident' ? t('incidents.log_author_resident', 'Residente') : comm.authorRole === 'technician' ? t('incidents.log_author_tech', 'Técnico') : t('incidents.log_author_admin', 'Admin')})
                                           </span>
                                           <span className="text-[7px] font-mono opacity-50">{comm.createdAt}</span>
                                         </div>
@@ -1656,14 +1649,14 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                                   name="replyText"
                                   type="text"
                                   className="flex-1 bg-[#FDFCFB] border border-[#E5E1DA] px-4 py-2.5 text-xs outline-none focus:border-[#1A1A1A] placeholder-[#8C857B]/50"
-                                  placeholder="Escribe una respuesta para el residente..."
+                                  placeholder={t('dashboard.reply_placeholder', 'Escribe una respuesta para el residente...')}
                                   required
                                 />
                                 <button
                                   type="submit"
                                   className="bg-[#1A1A1A] text-white hover:bg-black px-6 py-2.5 text-[10px] font-bold tracking-widest uppercase transition rounded-none cursor-pointer"
                                 >
-                                  Responder
+                                  {t('dashboard.reply_btn', 'Responder')}
                                 </button>
                               </form>
                             </div>
@@ -1671,7 +1664,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                         );
                       })() : (
                         <div className="border border-[#E5E1DA] bg-white p-12 text-center text-[#8C857B] text-xs">
-                          Selecciona un reporte de falla de la lista de la izquierda para ver su detalle, asignar técnicos e interactuar con el vecino.
+                          {t('dashboard.select_report_full_prompt', 'Selecciona un reporte de falla de la lista de la izquierda para ver su detalle, asignar técnicos e interactuar con el vecino.')}
                         </div>
                       )}
                     </div>
@@ -1722,8 +1715,8 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
             >
               <div className="flex justify-between items-start border-b border-[#E5E1DA] pb-3">
                 <div className="space-y-1">
-                  <span className="text-[10px] text-[#8C857B] font-mono block">COMUNICADO • {selectedAnnouncement.date}</span>
-                  <span className="text-xs font-bold font-sans text-[#1A1A1A] block">Emitido por: {selectedAnnouncement.author}</span>
+                  <span className="text-[10px] text-[#8C857B] font-mono block">{t('dashboard.announcement_label', 'COMUNICADO')} • {selectedAnnouncement.date}</span>
+                  <span className="text-xs font-bold font-sans text-[#1A1A1A] block">{t('dashboard.issued_by_label', 'Emitido por')}: {selectedAnnouncement.author}</span>
                 </div>
                 <button 
                   onClick={() => setSelectedAnnouncement(null)}
@@ -1746,7 +1739,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                   onClick={() => setSelectedAnnouncement(null)}
                   className="bg-[#1A1A1A] text-white hover:bg-black font-bold text-[10px] tracking-widest uppercase px-5 py-2.5 rounded-none transition"
                 >
-                  Entendido / Cerrar Aviso
+                  {t('dashboard.btn_understood_close', 'Entendido / Cerrar Aviso')}
                 </button>
               </div>
             </motion.div>
@@ -1766,8 +1759,8 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
             >
               <div className="flex justify-between items-center border-b border-[#E5E1DA] pb-3">
                 <div>
-                  <h3 className="text-base font-serif italic text-[#1A1A1A]">Vincularse a un Condominio</h3>
-                  <p className="text-[10px] text-[#8C857B] uppercase tracking-wider font-mono">Ingresa el Código de Vinculación o NIT</p>
+                  <h3 className="text-base font-serif italic text-[#1A1A1A]">{t('dashboard.join_modal_title', 'Vincularse a un Condominio')}</h3>
+                  <p className="text-[10px] text-[#8C857B] uppercase tracking-wider font-mono">{t('dashboard.join_modal_subtitle', 'Ingresa el Código de Vinculación o NIT')}</p>
                 </div>
                 <button onClick={() => setJoinModalOpen(false)} className="p-1 text-[#8C857B] hover:text-[#1A1A1A]">
                   <X className="w-5 h-5" />
@@ -1778,7 +1771,7 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                 <form onSubmit={handleSearchCondo} className="space-y-4">
                   <div>
                     <label className="block text-[9px] font-bold uppercase tracking-widest text-[#8C857B] mb-1.5">
-                      Código de Vinculación / NIT del Condominio
+                      {t('dashboard.join_code_label', 'Código de Vinculación / NIT del Condominio')}
                     </label>
                     <input
                       type="text"
@@ -1795,20 +1788,20 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                     disabled={searchingCondo}
                     className="w-full py-2.5 bg-[#1A1A1A] hover:bg-black text-white text-[10px] font-bold uppercase tracking-widest transition flex items-center justify-center gap-2"
                   >
-                    {searchingCondo ? 'Buscando Condominio...' : 'Verificar Código'}
+                    {searchingCondo ? t('dashboard.searching_condo', 'Buscando Condominio...') : t('dashboard.verify_code_btn', 'Verificar Código')}
                   </button>
                 </form>
               ) : (
                 <form onSubmit={handleConfirmJoinCondo} className="space-y-4">
                   <div className="p-3 bg-[#F5F2ED] border border-[#E5E1DA] space-y-1">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#0D9488]">Condominio Encontrado</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#0D9488]">{t('dashboard.condo_found', 'Condominio Encontrado')}</span>
                     <h4 className="font-serif italic text-lg text-[#1A1A1A]">{foundCondo.name}</h4>
                     <p className="text-[10px] text-[#8C857B] font-mono">{foundCondo.address} • NIT: {foundCondo.nit}</p>
                   </div>
 
                   <div>
                     <label className="block text-[9px] font-bold uppercase tracking-widest text-[#8C857B] mb-1.5">
-                      Selecciona tu Unidad / Departamento
+                      {t('dashboard.select_unit_label', 'Selecciona tu Unidad / Departamento')}
                     </label>
                     {condoUnitsList.length > 0 ? (
                       <select
@@ -1818,12 +1811,12 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                       >
                         {condoUnitsList.map(u => (
                           <option key={u.id} value={u.id}>
-                            {u.block_name} - Departamento {u.unit_number}
+                            {u.block_name} - {t('dashboard.unit_number_label', 'Departamento')} {u.unit_number}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      <p className="text-xs text-rose-700 italic">Este condominio aún no tiene departamentos generados.</p>
+                      <p className="text-xs text-rose-700 italic">{t('dashboard.no_units_generated', 'Este condominio aún no tiene departamentos generados.')}</p>
                     )}
                   </div>
 
@@ -1833,14 +1826,14 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
                       onClick={() => setFoundCondo(null)}
                       className="flex-1 py-2 border border-[#E5E1DA] text-[9px] font-bold uppercase tracking-widest text-[#8C857B] hover:bg-[#F5F2ED]"
                     >
-                      Atrás
+                      {t('payments.btn_back', 'Atrás')}
                     </button>
                     <button
                       type="submit"
                       disabled={joinSubmitting || condoUnitsList.length === 0}
                       className="flex-1 py-2 bg-[#1A1A1A] hover:bg-black text-white text-[9px] font-bold uppercase tracking-widest transition"
                     >
-                      {joinSubmitting ? 'Vinculando...' : 'Confirmar y Entrar'}
+                      {joinSubmitting ? t('dashboard.joining_btn', 'Vinculando...') : t('dashboard.confirm_enter_btn', 'Confirmar y Entrar')}
                     </button>
                   </div>
                 </form>
@@ -1853,8 +1846,8 @@ export default function DashboardClient({ isAdmin }: { isAdmin: boolean }) {
       {/* FOOTER */}
       <footer className="border-t border-[#E5E1DA] bg-white py-12 px-6 sm:px-10 text-[9px] font-bold tracking-widest uppercase text-[#8C857B] flex flex-col md:flex-row items-center justify-between gap-4 mt-16">
         <div>&copy; {new Date().getFullYear()} ResidenSmart</div>
-        <div>Estatus de Servicios • Operativo</div>
-        <div>Diseñado por ResidenSmart Digital</div>
+        <div>{t('dashboard.footer_services_status', 'Estatus de Servicios • Operativo')}</div>
+        <div>{t('dashboard.footer_designer', 'Diseñado por ResidenSmart Digital')}</div>
       </footer>
     </div>
   );
