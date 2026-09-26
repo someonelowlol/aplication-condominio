@@ -654,7 +654,7 @@ export default function PaymentsSection({
                     {payMethod === 'cash' && (
                       <div className="space-y-4">
                         <div className="text-xs text-slate-500 leading-relaxed">
-                          {t('payments.cash_instruction', 'Por favor, realiza tu pago en ventanilla o comercio corresponsal utilizando la referencia {ref}. Sube la foto o PDF del comprobante:').replace('{ref}', selectedPayment.reference)}
+                          {t('payments.cash_instruction', 'Por favor, realiza tu pago en ventanilla o comercio corresponsal utilizando la referencia {ref}. Sube la foto o PDF del comprobante:').replace('{ref}', selectedPayment.reference || 'N/A')}
                         </div>
 
                         {/* DRAG AND DROP ZONE */}
